@@ -1,0 +1,58 @@
+# Notebooks
+
+Writing of one's own beside the books one reads: notebooks of pages, written by hand, typed or
+spoken, and linked to the knowledge graph.
+
+## Language
+
+**Notebook**:
+A named collection of pages, kept in the library as an item of its own, private unless shared.
+_Avoid_: Journal, document, file
+
+**Page**:
+One sheet of a notebook, with one paper, holding content.
+_Avoid_: Sheet, note (for a page inside a notebook)
+
+**Loose note**:
+A single page that belongs to no notebook yet and can be filed into one later.
+_Avoid_: Memo, scrap, quick note
+
+**Paper**:
+What a page is printed with before anything is written on it: lines, squares, dots, staves or nothing.
+_Avoid_: Template, background, ruling
+
+**Content**:
+What is on a page: ink, typed text, pictures and audio clips.
+_Avoid_: Elements, objects, items
+
+**Ink**:
+Handwriting and drawing on a page, made of strokes.
+_Avoid_: Drawing, sketch, scribble (for the content as a whole)
+
+**Stroke**:
+One line of ink from pen down to pen up, with its pressure and the moment it was drawn.
+_Avoid_: Path, line, mark
+
+**Text block**:
+Typed text placed on a page, set on the paper's lines.
+_Avoid_: Text box, paragraph, typed note
+
+**Recording**:
+Audio recorded while a page was being written, tied to the strokes drawn during it.
+_Avoid_: Audio note, voice memo, clip (for a whole recording)
+
+**Transcript**:
+The words a recording was found to hold, each with its moment in the recording.
+_Avoid_: Subtitles, captions
+
+**Recognised text**:
+The words found in a page's ink.
+_Avoid_: OCR output, handwriting text
+
+**Place reference**:
+A link from a page, or a part of it, to a place in a book (a chapter or a passage).
+_Avoid_: Citation, anchor, bookmark
+
+**Notebook scope**:
+The part of the knowledge graph that holds what was found in one notebook, linked to things elsewhere.
+_Avoid_: Notes graph, layer
