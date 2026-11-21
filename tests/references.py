@@ -115,6 +115,7 @@ def listing(bench, step, book, made, page, ids):
         listed
     )
     assert {one["notebookTitle"] for one in listed} == {"Reading The Crossing"} and {one["number"] for one in listed} == {1, 2}, listed
+    assert all(one["global"] and one["global"] != str(book) for one in listed), "the book is named by its global id too"
     followed = bench.ok("followReference", ids["words"])
     assert followed["book"] == book and followed["moved"] is False and followed["section"] == listed[2]["section"], followed
     bench.ok("pageWritten", page)
@@ -204,6 +205,8 @@ def travelling(bench, step, book, page, ids):
             add_book(other, CHAPTERS)
         on_other = {one["id"]: one for one in other.ok("references", page)}
         assert on_other[ids["tied"]]["here"] is True and on_other[ids["tied"]]["quote"] != "", on_other
+        mine = {one["id"]: one for one in bench.ok("references", page)}[ids["tied"]]
+        assert on_other[ids["tied"]]["global"] == mine["global"], (on_other, mine)
         other.ok("placeReference", ids["tied"], {"x": 5, "y": 100})
         bench.ok("removeReference", ids["start"])
         bench.omabook("sync", there)

@@ -6,12 +6,16 @@ Omabook it needs.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-21
+
+Needs Omabook 0.2.0.
+
 ### Added
 
 - Notebooks, pages and paper in the library (#2): a notebook is a private book of its own format on the
   shelf, opened in the plugin's view; pages on lined (narrow, college, wide), squared, dotted, blank,
   music-stave or Cornell paper at A4, A5 or Letter, added, reordered and removed; loose notes filed into a
-  notebook later. Kept in Omabook's change log; the notebook file is a snapshot. Needs Omabook 0.1.10.
+  notebook later. Kept in Omabook's change log; the notebook file is a snapshot.
 - Ink on a page (#3): a page opens to write on with Omabook's ink surface, with a pen and a highlighter in a
   few colours and thicknesses, an eraser of parts or whole strokes, undo and redo, zoom, palm rejection, and
   a finger and the mouse as a fallback; keys for every tool. Strokes are kept per page in the change log,
@@ -71,10 +75,19 @@ Omabook it needs.
   print sharp, typed text as text, pictures, the handwriting's recognised words unseen so they can be found and
   copied, and place references as links) or as Markdown (typed text, the handwriting's words, what was said
   with its moments, pictures as files beside it, place references as links with the words they refer to), by
-  the name you give it. Omabook doesn't yet let a plugin ask where to save, so it is saved in the plugin's own
-  folder, under `data/exports/`, which the view opens. Ask under a notebook's title asks the AI chosen in
+  the name you give it. Ask under a notebook's title asks the AI chosen in
   Omabook's settings about the notebook ("what did I write about tides?"), or summarises it: it reads the
   notebook's own words alone, and of the books it refers to only the passages up to where you have read. A
-  notebook is private: the AI reads it only once you let it (*Let the AI read this notebook*, the same choice
+  notebook is private: a hosted AI reads it only once you let it (*Let the AI read this notebook*, the same choice
   as a hosted server reading its handwriting), what was said while writing only when its recordings may go
   too, and nothing is sent with the AI off. From the command line: `exportNotebook` and `askNotebook`.
+- Saving where you choose, links that open the book, and the AI's whereabouts from Omabook (#11): Export asks
+  where to save with the desktop's own save dialog, and keeps nothing of it in the plugin's folder, which goes to
+  your other computers (an export that took long to make waits for *Save…*); a Markdown export saved so holds its
+  pictures in it, as the dialog writes one file. From the command line `exportNotebook` still saves under
+  `data/exports/` by the name given, the pictures beside the Markdown. A place reference in a PDF or Markdown is
+  an `omabook://book/<global id>/section/<n>` link, which opens Omabook at the passage on any of your computers,
+  and a reference finds its book by that global id first. Whether the AI chosen in Omabook's settings is your own
+  or someone else's is Omabook's to say now: your own reads any notebook, what was said in it too, and a hosted
+  one only a notebook you let it read (*Let the AI read this notebook*), with Omabook sending nothing to anyone
+  else's otherwise.

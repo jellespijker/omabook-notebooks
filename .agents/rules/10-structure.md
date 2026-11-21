@@ -32,13 +32,13 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Recordings` | what was said while a page was written (Omabook's `audio`): recorded, kept with each stroke's moment in it, played from the ink |
 | `Transcripts` | the words a recording holds (Omabook's `recognize.audio`), each with its moment, kept with the recording |
 | `Finder` | a page's words (typed, recognised, said) and the pages that hold some words, with where |
-| `References` | place references: from a page to a passage of a book, by its words and its place, found again when the book's file changes |
+| `References` | place references: from a page to a passage of a book (by its global id), by its words and its place, found again when the book's file changes; their `omabook://` links |
 | `Snapshot` | the notebook file: written from the store, read back, and its book format |
 | `Shelf` | a notebook as an item in the library, and what the view is shown |
 | `Mentions` | what a page is about in the knowledge graph (`omabook.graph`): suggested, said by hand, tied to the notebook's book |
 | `PdfExport` | a notebook's pages drawn as a PDF: paper, ink as lines, text, pictures, references as links |
 | `MarkdownExport` | a notebook's pages' words as Markdown, pictures as files beside it |
-| `Exports` | the pages chosen, saved as PDF or Markdown under `data/exports/` |
+| `Exports` | the pages chosen, saved as PDF or Markdown where the person chooses (`ui.saveFile`), or under `data/exports/` from the command line |
 | `Prompts` | every word sent to a model |
 | `Ai` | the one way to the model the person chose (`omabook.ai`), its answers checked |
 | `Asking` | a question about a notebook, from its own words, under recognition's privacy rule |

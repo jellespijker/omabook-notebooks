@@ -1,6 +1,7 @@
 """Exports (#9): a sample notebook (ink, typed Markdown and plain text, pictures, recognised handwriting,
 a recording's transcript and place references) saved as a PDF and as Markdown, the whole of it or the pages
-chosen, under the plugin's data/exports/; and read through Omabook's MCP tools, read-only.
+chosen, under the plugin's data/exports/ from the command line, or where the person chooses with Omabook's save
+dialog from the view (#11), which a command line has none of; and read through Omabook's MCP tools, read-only.
 
 The PDF is read here as a PDF reader would: its cross-reference table must lead to every object, and its
 pages hold the paper and the ink as lines, the typed words as text, the handwriting's words as unseen text,
@@ -62,6 +63,7 @@ def sample(bench, server):
     return {
         "notebook": made["notebook"],
         "book": book,
+        "global": bench.ok("references", first)[0]["global"],
         "notebook_book": made["book"],
         "pages": [first, second],
         "crossing": crossing,
@@ -109,8 +111,8 @@ def drawn_right(found, made):
     images = [body for body in found.values() if b"/Subtype /Image" in body]
     assert any(b"/SMask" in body for body in images), "a see-through picture keeps its mask"
     assert any(b"/CA 0.4" in body for body in found.values()), "the highlighter is see-through"
-    link = f"/URI (omabook://book/{made['book']}/section/{made['crossing']})".encode()
-    assert any(link in body for body in found.values()), "a place reference is a link to its passage"
+    link = f"/URI (omabook://book/{made['global']}/section/{made['crossing']})".encode()
+    assert made["global"] and any(link in body for body in found.values()), "a place reference links to its passage by the book's global id"
 
 
 def read_by_tools(path):
@@ -163,7 +165,7 @@ def markdown(bench, step, made):
         assert file.read() == base64.b64decode(made["picture"].split(",", 1)[1]), "the picture's own bytes"
     assert "**Handwriting**\n\n> Gulls over the harbour" in text, text
     assert "**Said while writing**\n\n- **0:01** Kelsier pushes steel." in text, text
-    link = f"[The Crossing, The crossing](omabook://book/{made['book']}/section/{made['crossing']}): “{references.QUOTE}"
+    link = f"[The Crossing, The crossing](omabook://book/{made['global']}/section/{made['crossing']}): “{references.QUOTE}"
     assert link in text, text
     step("a notebook exports as Markdown: typed text, handwriting, what was said, pictures as files, references as links")
 
@@ -172,6 +174,19 @@ def markdown(bench, step, made):
     left = os.path.join(again["folder"], "pictures")
     assert again["pictures"] == 0 and not (os.path.isdir(left) and os.listdir(left)), "no picture of before is left"
     step("exported again, the Markdown takes the place of the one before, with no picture of it left behind")
+
+
+def chosen_place(bench, step, made):
+    """From the view it goes where the person chooses; with nobody to ask (a command line), nowhere."""
+    before = sorted(os.listdir(os.path.join(bench.plugin, "data", "exports")))
+    told = bench.ok("chooseExport", made["notebook"], {"format": "pdf"})
+    assert told == {"format": "pdf", "pages": 2, "missed": 0, "waiting": False, "saved": None}, told
+    told = bench.ok("chooseExport", made["notebook"], {"format": "markdown", "pages": [made["pages"][1]]})
+    assert told["format"] == "markdown" and told["pages"] == 1 and told["saved"] is None, told
+    assert sorted(os.listdir(os.path.join(bench.plugin, "data", "exports"))) == before, "nothing of it is kept in the plugin's folder"
+    assert 'not "docx"' in bench.refused("chooseExport", made["notebook"], {"format": "docx"})
+    assert "no export waiting" in bench.refused("saveExport")
+    step("from the view an export is saved where the person chooses, nothing of it in the plugin's folder; with nobody to ask, nowhere")
 
 
 def mcp(bench, step, made):
@@ -201,5 +216,6 @@ def check(bench, step):
     pdf_whole(bench, step, made)
     pdf_chosen(bench, step, made)
     markdown(bench, step, made)
+    chosen_place(bench, step, made)
     mcp(bench, step, made)
     return made, server

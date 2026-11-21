@@ -1,9 +1,9 @@
 {
     "name": "Notebooks",
-    "version": "0.1",
+    "version": "1.0",
     "author": "",
     "description": "Notebooks of pages on paper (lined, squared, dotted, blank, music staves or Cornell), beside the books you read. Private unless you share them.",
-    "omabook": "0.1.10",
+    "omabook": "0.2.0",
     "script": "main.js",
     "private": [
         "omanotebook"

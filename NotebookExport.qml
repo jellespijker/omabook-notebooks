@@ -4,11 +4,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Exporting the notebook shown (#9): as a PDF (ink, paper, typed text and
-// pictures, as the pages look) or as Markdown (its words, pictures as files
-// beside it, place references as links), the whole notebook or the page
-// open, by a name (the notebook's title when none is given). Omabook can't
-// yet let a plugin ask where to save, so it is saved in the plugin's own
-// folder, and the folder opens from here.
+// pictures, as the pages look) or as Markdown (its words and pictures, place
+// references as links), the whole notebook or the page open, by a name (the
+// notebook's title when none is given), saved where the person chooses with
+// the desktop's save dialog (#11). One too long in the making for the
+// dialog to open by itself waits for Save.
 ColumnLayout {
     id: box
 
@@ -28,7 +28,12 @@ ColumnLayout {
         const options = {format: pdf.checked ? "pdf" : "markdown", name: name.text.trim()}
         if (onlyPage.checked && page !== "")
             options.pages = [page]
-        asked = backend.scripts.request(plugin, "exportNotebook", [notebook ? notebook.id : "", options])
+        asked = backend.scripts.request(plugin, "chooseExport", [notebook ? notebook.id : "", options])
+    }
+
+    function saveMade() {
+        problem = ""
+        asked = backend.scripts.request(plugin, "saveExport", [])
     }
 
     Connections {
@@ -65,15 +70,17 @@ ColumnLayout {
     }
     Label {
         Layout.fillWidth: true
-        visible: box.saved !== null
-        text: box.saved ? "Saved as " + box.saved.path + (box.saved.missed ? " (" + box.saved.missed + " pictures not shown)" : "") : ""
+        visible: box.saved !== null && !box.saved.waiting
+        text: !box.saved ? "" : !box.saved.saved ? "Not saved." : "Saved as " + box.saved.saved.name
+              + (box.saved.missed ? " (" + box.saved.missed + (box.saved.missed === 1 ? " picture" : " pictures") + " not shown)" : "")
         wrapMode: Text.Wrap
     }
     Button {
-        visible: box.saved !== null
-        flat: true
-        text: "Open the folder"
-        onClicked: Qt.openUrlExternally("file://" + box.saved.folder)
+        visible: box.saved !== null && box.saved.waiting === true
+        text: box.asked >= 0 ? "Saving…" : "Save…"
+        enabled: box.asked < 0
+        Accessible.name: "Choose where to save the export"
+        onClicked: box.saveMade()
     }
     Label {
         Layout.fillWidth: true
@@ -84,7 +91,7 @@ ColumnLayout {
     }
     Label {
         Layout.fillWidth: true
-        text: "Saved in Notebooks' own folder, which syncs to your other computers; copy it from there to keep it elsewhere."
+        text: "Saved where you choose, on this computer only. A Markdown export holds its pictures in it."
         color: theme.colors.muted
         font.pixelSize: 11
         wrapMode: Text.Wrap

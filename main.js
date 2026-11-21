@@ -116,9 +116,10 @@ function setNotebookShared(id, shared) {
     return Store.notebook(id);
 }
 
-// Whether the AI may read a notebook (#9): its handwriting recognised by a
-// hosted server, and questions about it asked of the model Omabook's
-// settings chose (Asking). The same as `hosted` of its recognition.
+// Whether a hosted AI may read a notebook (#9): its handwriting recognised by
+// a hosted server, and questions about it asked of the model Omabook's
+// settings chose when that is someone else's computer (Asking); one's own
+// reads it either way. The same as `hosted` of its recognition.
 function setNotebookReading(id, allowed) {
     return Store.changeNotebook(id, {hosted: allowed === true});
 }
@@ -359,11 +360,22 @@ function snapshotText(snapshot) { return Snapshot.text(Snapshot.read(JSON.string
 // A notebook, "" for the loose notes, exported (#9): a promise of where it
 // was saved, {format, file, path, folder, pages, ...}. `options` {format
 // ("pdf", the default, or "markdown"), pages (ids; all when not given),
-// name}. Saved under the plugin's data/exports/, as Omabook doesn't yet let a
-// plugin ask where to save.
+// name}. Saved under the plugin's data/exports/: for the command line, where
+// there is nobody to ask where.
 function exportNotebook(id, options) { return Exports.save(id, options); }
+
+// The same, saved where the person chooses with the desktop's save dialog
+// (#11), from the view: a promise of {format, pages, missed, saved: {name,
+// size} or null, waiting}. With `waiting`, it was too long in the making
+// for the dialog to open by itself, and saveExport opens it on their Save.
+function chooseExport(id, options) { return Exports.choose(id, options); }
+function saveExport() { return Exports.saveMade(); }
 
 // A question about a notebook (#9), "" for a summary: a promise of {answer,
 // pages, cut, said}, from the notebook's own words alone, once the person let
-// the AI read it (setNotebookReading). `options` {pages: [ids]}.
+// the AI read it (setNotebookReading) or the AI is one's own. `options` {pages: [ids]}.
 function askNotebook(id, question, options) { return Asking.ask(id, question, options); }
+
+// Whether the AI may read a notebook now (#11), as Omabook says where the
+// model chosen is: {available, hosted, speech, why, message}.
+function askReach(id) { return Asking.reach(id); }

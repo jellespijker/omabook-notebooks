@@ -5,9 +5,10 @@ import QtQuick.Layouts
 
 // Asking the AI about the notebook shown (#9): a question ("what did I
 // write about entropy?"), or a summary, answered from the notebook's own
-// words (the script's `askNotebook`). A notebook is private: the AI reads it
-// only once the person lets it here, and then by the model chosen in
-// Omabook's settings; never with the AI off.
+// words (the script's `askNotebook`). A notebook is private: the model
+// chosen in Omabook's settings reads it when it is the person's own (Omabook
+// says, #11), someone else's only once the person lets it here; never with
+// the AI off.
 ColumnLayout {
     id: box
 
@@ -17,6 +18,8 @@ ColumnLayout {
     property int asked: -1
     property string answer: ""
     property string problem: ""
+    // Whether the AI may read it now (the script's `askReach`), asked again when the notebook changes.
+    readonly property var reach: box.notebook ? (backend.scripts.call(box.plugin, "askReach", [box.notebook.id]) || null) : null
     signal changed()
 
     spacing: 4
@@ -45,11 +48,18 @@ ColumnLayout {
             box.changed()
         }
         ToolTip.visible: hovered
-        ToolTip.text: "Its words, handwriting included, go to the AI chosen in Omabook's settings, which may be a hosted one."
+        ToolTip.text: "Its words, handwriting included, may go to the AI chosen in Omabook's settings when that is someone else's computer."
+    }
+    Label {
+        Layout.fillWidth: true
+        visible: !!box.reach && !box.reach.available
+        text: box.reach ? box.reach.message : ""
+        color: theme.colors.muted
+        wrapMode: Text.Wrap
     }
     RowLayout {
         Layout.fillWidth: true
-        enabled: !!box.notebook && box.notebook.hosted === true && box.asked < 0
+        enabled: !!box.reach && box.reach.available === true && box.asked < 0
         TextField {
             id: question
             Layout.fillWidth: true
