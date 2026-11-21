@@ -145,7 +145,9 @@ Item {
         keys[Qt.Key_Return] = here.editChosen
         keys[Qt.Key_Enter] = here.editChosen
         keys[Qt.Key_Delete] = here.removeChosen
-        keys[Qt.Key_L] = function () { if (here.chosenItem) here.arrange(here.chosenItem.layer === "above" ? "below" : "above") }
+        // L is the lasso's, but for one chosen: above or below the ink.
+        if (here.chosenItem)
+            keys[Qt.Key_L] = function () { here.arrange(here.chosenItem.layer === "above" ? "below" : "above") }
         keys[Qt.Key_M] = here.toggleFormat
         keys[Qt.Key_Left] = function () { here.nudge(-1, 0, shift, alt) }
         keys[Qt.Key_Right] = function () { here.nudge(1, 0, shift, alt) }

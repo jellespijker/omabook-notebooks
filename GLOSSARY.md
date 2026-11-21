@@ -43,7 +43,12 @@ _Avoid_: Path, line, mark
 
 **Tool**:
 What ink is written or taken out with: the pen, the highlighter (a broad pen whose colour shows through)
-or the eraser (of what it covers, or of whole strokes).
+or the eraser (of what it covers, or of whole strokes); and the lasso, which holds strokes.
+
+**Lasso**:
+The tool that goes around strokes to hold them, to be moved, recoloured, copied, cut or taken away; what it
+does is kept as erasing is: the strokes taken out, new ones put in.
+_Avoid_: Marquee, selection (for what the lasso holds)
 _Avoid_: Brush, mode
 
 **Text block**:
@@ -75,7 +80,7 @@ _Avoid_: OCR output, handwriting text
 
 **Selection**:
 Strokes of a page chosen with the Select tool, to be read or made a text block on their own.
-_Avoid_: Lasso, marquee (in words a person reads)
+_Avoid_: Marquee (in words a person reads)
 
 **Place reference**:
 A link from a page, or a part of it, to a place in a book (a chapter or a passage).

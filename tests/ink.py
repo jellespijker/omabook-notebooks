@@ -1,5 +1,6 @@
-"""Ink on pages (#3): strokes added, erased whole and in part, undone, kept per page in the
-change log, written into the notebook's file, and two computers' strokes on one page merged.
+"""Ink on pages (#3): strokes added, erased whole and in part, undone, moved and recoloured with the
+lasso, kept per page in the change log, written into the notebook's file, and two computers' strokes
+on one page merged.
 
 The strokes are ones the ink surface could have sent (strokes.py): a pen moved over the page,
 with its pressure and its moments, in Omabook's codec. tests/run.py calls check() with its bench;
@@ -60,13 +61,38 @@ def writing(bench, step):
     return notebook, first
 
 
+def lassoing(bench, step, first):
+    """What the lasso does comes as erasing does: a stroke moved or recoloured taken out, a new one put in."""
+    before = bench.ok("strokes", first)
+    chosen = sorted(before)[:2]
+    moved = strokes.batch(strokes.line(40, 80), strokes.line(40, 90, colour=0xFFC0392B), remove=chosen)
+    assert bench.ok("ink", first, moved) == len(before)
+    after = bench.ok("strokes", first)
+    assert not set(chosen) & set(after) and all(after[key] == value for key, value in moved["add"].items())
+    pasted = strokes.batch(strokes.line(60, 100))
+    assert bench.ok("ink", first, pasted) == len(before) + 1
+    assert bench.ok("ink", first, {"add": {}, "remove": list(pasted["add"])}) == len(before)
+    step("the lasso's moves and recolouring are kept as erasing is: the strokes taken out, new ones in one write; paste and cut too")
+
+    many = strokes.batch(*[strokes.line(5 + n % 50, 5 + n // 50) for n in range(700)])
+    assert bench.ok("ink", first, many) == len(before) + 700
+    everything = bench.ok("strokes", first)
+    again = strokes.batch(*[strokes.line(6 + n % 50, 5 + n // 50) for n in range(700)], remove=list(many["add"]))
+    assert len(again["add"]) + len(again["remove"]) > 1000
+    assert bench.ok("ink", first, again) == len(everything)
+    after = bench.ok("strokes", first)
+    assert not set(many["add"]) & set(after) and set(again["add"]) <= set(after)
+    bench.ok("ink", first, {"add": {}, "remove": list(again["add"])})
+    step("a lasso moving more strokes than one write takes is kept in several, what it added first")
+
+
 def refusing(bench, step, first):
     good = strokes.line(1, 1)
     assert "isn't one the ink surface wrote" in bench.refused("ink", first, {"add": {"has space": good}})
     assert "isn't one the ink surface wrote" in bench.refused("ink", first, {"add": {"abc": "not base64!"}})
     assert "lists the strokes it removes" in bench.refused("ink", first, {"add": {}, "remove": "abc"})
     assert "by their ids" in bench.refused("ink", first, {"add": {}, "remove": [7]})
-    assert "at most 1000" in bench.refused("ink", first, {"add": {}, "remove": [f"s{n}" for n in range(1001)]})
+    assert "at most 10000" in bench.refused("ink", first, {"add": {}, "remove": [f"s{n}" for n in range(10001)]})
     assert "no such page" in bench.refused("ink", "p-gone", strokes.batch(good))
     assert len(bench.ok("strokes", first)) == 3, "nothing of a refused batch is kept"
     step("a batch that isn't one the ink surface could send, or for a page there isn't, is refused and nothing kept")
@@ -93,6 +119,14 @@ def merging(bench, step):
         assert bench.ok("strokes", page) == merged, bench.ok("strokes", page)
         assert other.ok("strokes", page) == merged, other.ok("strokes", page)
         step("strokes written on one page on two computers at once merge: all both added, none either erased")
+
+        stroke = sorted(merged)[0]
+        bench.ok("ink", page, strokes.batch(strokes.line(70, 30), remove=[stroke]))
+        other.ok("ink", page, strokes.batch(strokes.line(10, 30, colour=0xFF2E7D4F), remove=[stroke]))
+        bench.omabook("sync", there)
+        here, theirs = bench.ok("strokes", page), other.ok("strokes", page)
+        assert here == theirs and stroke not in here and len(here) == len(merged) + 1, (here, theirs)
+        step("a stroke the lasso moved on one computer and recoloured on the other is both, never lost")
         bench.ok("removeNotebook", made["notebook"])
     finally:
         shutil.rmtree(other.scratch, ignore_errors=True)
@@ -100,6 +134,7 @@ def merging(bench, step):
 
 def check(bench, step):
     notebook, first = writing(bench, step)
+    lassoing(bench, step, first)
     refusing(bench, step, first)
     bench.ok("removeNotebook", notebook["id"])
     merging(bench, step)

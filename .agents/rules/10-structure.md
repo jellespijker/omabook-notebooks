@@ -22,7 +22,7 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Paper` | the kinds of paper and sizes, and what each draws, in millimetres |
 | `Typed` | a text block's words: plain text or Markdown, cleaned, never HTML |
 | `Store` | **the live data**: notebooks, pages, text blocks, pictures, recognised text, recordings, transcripts and mentions as things in `omabook.log` (ADR 0002) |
-| `Ink` | the strokes on a page (ink batches from Omabook's ink surface, through `Store`), where each lies, and the tools |
+| `Ink` | the strokes on a page (ink batches from Omabook's ink surface and its lasso, through `Store`), where each lies, and the tools |
 | `Pictures` | a picture's bytes: checked, capped, in pieces for the log, joined again |
 | `Content` | text blocks and pictures on a page: placed on the paper's lines, moved, resized, above or below the ink |
 | `Recognised` | the words found in a page's ink (Omabook's `recognize.ink`): read after the pen rests, kept with the strokes, corrected, made a text block |

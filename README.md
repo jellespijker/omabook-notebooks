@@ -37,6 +37,8 @@ and comes as 1.0 with Omabook 0.2.0.
   plays the ink shows as it was then. Each recording is transcribed in the background, word by word, by your
   own transcription server or whisper.cpp, and shown beside the page (`W`); with none, it says so. Speech goes
   to a hosted server only for a notebook that chose it, and only when Omabook's settings allow it.
+- **The lasso.** `L` goes around strokes to move, recolour (`1` to `4`), copy, cut, paste or take them away;
+  it is kept as erasing is, so it merges between computers too.
 - **Loose notes.** A page of no notebook, filed into one later (or taken out again).
 - **Live in the change log.** Notebooks and pages are kept as operations in Omabook's change log, so they
   go to your other computers and merge there; the notebook file is a snapshot written from them.

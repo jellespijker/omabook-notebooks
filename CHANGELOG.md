@@ -52,3 +52,8 @@ Omabook it needs.
   goes into the graph unasked and no word goes to a model. Notebooks are books Notebooks keeps private
   (`"private"` in plugin.json, Omabook #127): nothing of one, its ties in the graph neither, goes into a
   shared or published space.
+- The lasso on a page (#3): the Lasso (L) goes around strokes to drag them elsewhere, recolour them (1 to 4),
+  copy, cut and paste them (Ctrl+C, Ctrl+X, Ctrl+V, also between pages) or take them away (Delete), each a
+  step of undo. What it does is kept as erasing is, so it merges between computers: a stroke moved on one and
+  recoloured on the other is both, never lost; a moved stroke keeps its moment in a recording. Needs an
+  Omabook with the ink surface's lasso (#129).

@@ -28,6 +28,10 @@ import Omabook
 // (PageRecordings, #5): V records and stops, A the Listen tool (a tap on
 // the ink plays from when it was written), W the transcripts beside it.
 // K shows what the page is about in the knowledge graph (PageAbout, #7).
+// The lasso (L) goes around strokes to move them (drag), recolour them (1
+// to 4), copy, cut, paste or take them away (the ink surface's keys: Ctrl+C,
+// Ctrl+X, Ctrl+V, Delete); each is an ink batch, as erasing is. The tools
+// above are PageTools.
 //
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
@@ -54,7 +58,7 @@ FocusScope {
     signal turn(int by)
 
     readonly property var tools: plugin === "" ? null : backend.scripts.call(plugin, "inkTools", [])
-    // "pen", "highlighter", "eraser", "type" or "select".
+    // "pen", "highlighter", "eraser", "lasso", "type", "select" or "listen".
     property string tool: "pen"
     property var colourAt: ({pen: 0, highlighter: 0})
     property var widthAt: ({})
@@ -70,9 +74,15 @@ FocusScope {
     property var asked: ({})
     // What is on the page but its ink: text blocks and pictures.
     readonly property var chosenItem: pageContent.chosenItem
+    // For PageTools: the ink surface, the text blocks and pictures, and what the lasso holds.
+    readonly property alias ink: surface
+    readonly property alias items: pageContent
+    readonly property int lassoed: surface.selection.count
 
     readonly property bool resting: tool === "type" || tool === "select" || tool === "listen"
-    readonly property var pen: tools ? tools.pens.find(function (one) { return one.id === (page.tool === "eraser" || page.resting ? "pen" : page.tool) }) : null
+    readonly property var pen: tools ? tools.pens.find(function (one) {
+        return one.id === (page.tool === "eraser" || page.tool === "lasso" || page.resting ? "pen" : page.tool)
+    }) : null
     readonly property var colours: tools && pen ? tools.colours[pen.id] : []
     readonly property real fit: Math.max(0.5, (flick.width - 24) / sheet.layout.width)
 
@@ -84,12 +94,17 @@ FocusScope {
     function choose(id) {
         if (id !== "type") { pageContent.chosen = ""; pageContent.editing = "" }
         if (id !== "select") { selection = []; selected = null }
+        if (id !== "lasso") surface.selection.clear()
         if (id === "eraser" && tool === "eraser")
             surface.eraser = surface.eraser === InkSurface.Parts ? InkSurface.Strokes : InkSurface.Parts
         tool = id
     }
     function chooseColour(at) {
-        if (tool === "eraser" || resting) choose("pen")
+        if (tool === "lasso" && lassoed > 0) {
+            if (at >= 0 && at < colours.length) surface.selection.recolor(colours[at].value)
+            return
+        }
+        if (tool === "eraser" || tool === "lasso" || resting) choose("pen")
         if (at < 0 || at >= colours.length) return
         const next = Object.assign({}, colourAt)
         next[pen.id] = at
@@ -98,7 +113,7 @@ FocusScope {
     // A step thinner (-1) or thicker (1) of what the tool comes in.
     function thicker(by) {
         if (tool === "type") { pageContent.arrange(by < 0 ? "back" : "front"); return }
-        if (tool === "select") return
+        if (tool === "select" || tool === "lasso") return
         const one = tool === "eraser" ? tools.eraser : pen
         const at = Math.max(0, Math.min(one.widths.length - 1, one.widths.indexOf(widthOf(tool)) + by))
         const next = Object.assign({}, widthAt)
@@ -128,16 +143,19 @@ FocusScope {
     // The point of the paper under a pointer, in millimetres of the page.
     function onPaper(point) { return {x: point.x / sheet.unit, y: point.y / sheet.unit} }
     // The strokes that lie within a rectangle of the page, in millimetres.
-    function select(from, to) {
-        const r = {x: Math.min(from.x, to.x), y: Math.min(from.y, to.y), width: Math.abs(to.x - from.x), height: Math.abs(to.y - from.y)}
+    function strokesIn(r) {
         const lying = backend.scripts.call(plugin, "strokeBounds", [pageId]) || {}
-        selected = r
-        selection = Object.keys(lying).filter(function (id) {
+        return Object.keys(lying).filter(function (id) {
             const b = lying[id]
             return b.x < r.x + r.width && b.x + b.width > r.x && b.y < r.y + r.height && b.y + b.height > r.y
         })
+    }
+    function select(from, to) {
+        selected = {x: Math.min(from.x, to.x), y: Math.min(from.y, to.y), width: Math.abs(to.x - from.x), height: Math.abs(to.y - from.y)}
+        selection = strokesIn(selected)
         if (selection.length) showText = true
     }
+
     // Done with the page: what waits goes, and the notebook's file follows.
     function leave() {
         if (!entry) return
@@ -191,6 +209,7 @@ FocusScope {
         plain[Qt.Key_A] = function () { page.choose("listen") }
         plain[Qt.Key_W] = function () { page.showSaid = !page.showSaid }
         plain[Qt.Key_K] = function () { page.showAbout = !page.showAbout }
+        plain[Qt.Key_L] = function () { page.choose("lasso") }
         if (page.tool === "type")
             Object.assign(plain, pageContent.keys(event))
         const one = ctrl ? withCtrl[event.key] : plain[event.key]
@@ -236,96 +255,13 @@ FocusScope {
         onPictureAdded: { page.problem = ""; page.choose("type") }
     }
 
-    component Tool: Button {
-        flat: true
-        checkable: false
-        focusPolicy: Qt.NoFocus
-        font.pixelSize: 13
-    }
-
     ColumnLayout {
         anchors.fill: parent
         spacing: 6
 
-        // The tools, wrapped where the view is narrow.
-        Flow {
+        PageTools {
             Layout.fillWidth: true
-            spacing: 4
-
-            Repeater {
-                model: page.tools ? page.tools.pens : []
-                delegate: Tool {
-                    required property var modelData
-                    text: modelData.title + " (" + modelData.key + ")"
-                    highlighted: page.tool === modelData.id
-                    onClicked: page.choose(modelData.id)
-                }
-            }
-            Tool {
-                text: (surface.eraser === InkSurface.Strokes ? "Eraser: whole strokes" : "Eraser") + " (E)"
-                highlighted: page.tool === "eraser"
-                onClicked: page.choose("eraser")
-            }
-            Tool { text: "Type (T)"; highlighted: page.tool === "type"; onClicked: page.choose("type") }
-            Tool { text: "Select (S)"; highlighted: page.tool === "select"; onClicked: page.choose("select") }
-            Tool { text: "Text (R)"; highlighted: page.showText; onClicked: page.showText = !page.showText }
-            Tool { text: "Picture… (I)"; onClicked: pageContent.pickPicture() }
-            Tool { text: "Listen (A)"; highlighted: page.tool === "listen"; onClicked: page.choose("listen") }
-            Tool { text: "Said (W)"; highlighted: page.showSaid; onClicked: page.showSaid = !page.showSaid }
-            Tool { text: "About (K)"; highlighted: page.showAbout; onClicked: page.showAbout = !page.showAbout }
-            Tool { text: "Above ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "below"; onClicked: pageContent.arrange("above") }
-            Tool { text: "Below ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "above"; onClicked: pageContent.arrange("below") }
-            Tool { text: "To the back ["; visible: !!page.chosenItem; onClicked: pageContent.arrange("back") }
-            Tool { text: "To the front ]"; visible: !!page.chosenItem; onClicked: pageContent.arrange("front") }
-            Tool {
-                visible: !!page.chosenItem && page.chosenItem.kind === "text"
-                text: (page.chosenItem && page.chosenItem.format === "plain" ? "Plain text" : "Markdown") + " (M)"
-                onClicked: pageContent.toggleFormat()
-            }
-            Tool { text: "Remove (Delete)"; visible: !!page.chosenItem; onClicked: pageContent.removeChosen() }
-            Repeater {
-                model: page.resting ? [] : page.colours
-                delegate: Item {
-                    id: swatch
-                    required property var modelData
-                    required property int index
-                    width: 30
-                    height: 30
-                    Accessible.role: Accessible.Button
-                    Accessible.name: modelData.title
-                    ToolTip.visible: swatchHover.hovered
-                    ToolTip.delay: 500
-                    ToolTip.text: modelData.title + " (" + (index + 1) + ")"
-                    readonly property bool chosen: page.tool !== "eraser" && page.colourAt[page.pen.id] === index
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: 22
-                        height: 22
-                        radius: 11
-                        color: swatch.modelData.value
-                        border.width: swatch.chosen ? 3 : 1
-                        border.color: swatch.chosen ? theme.foreground : theme.colors.selection
-                    }
-                    HoverHandler { id: swatchHover; cursorShape: Qt.PointingHandCursor }
-                    TapHandler { onTapped: page.chooseColour(swatch.index) }
-                }
-            }
-            Tool { text: "Thinner ["; visible: !page.resting; onClicked: page.thicker(-1) }
-            Tool { text: "Thicker ]"; visible: !page.resting; onClicked: page.thicker(1) }
-            Tool { text: "Undo"; enabled: surface.canUndo; onClicked: surface.undo() }
-            Tool { text: "Redo"; enabled: surface.canRedo; onClicked: surface.redo() }
-            Tool { text: "Clear page"; enabled: surface.count > 0; onClicked: surface.clear() }
-            Tool {
-                text: surface.fingers === InkSurface.Draw ? "Finger writes (F)"
-                    : surface.fingers === InkSurface.Scroll ? "Finger scrolls (F)"
-                    : (surface.penSeen ? "Finger scrolls, pen writes (F)" : "Finger writes until a pen is seen (F)")
-                onClicked: page.cycleFingers()
-            }
-            Tool { text: "−"; onClicked: page.zoomBy(0.8) }
-            Tool { text: Math.round(page.zoom * 100) + "%"; onClicked: page.zoom = 1 }
-            Tool { text: "+"; onClicked: page.zoomBy(1.25) }
-            Tool { text: "Page before"; visible: page.hasBefore; onClicked: page.turn(-1) }
-            Tool { text: "Page after"; visible: page.hasAfter; onClicked: page.turn(1) }
+            page: page
         }
 
         Label {
@@ -407,7 +343,8 @@ FocusScope {
                     objectName: "pageInk"
                     anchors.fill: parent
                     inkScale: sheet.unit
-                    tool: page.tool === "eraser" ? InkSurface.Eraser : InkSurface.Pen
+                    tool: page.tool === "eraser" ? InkSurface.Eraser : page.tool === "lasso" ? InkSurface.Lasso : InkSurface.Pen
+                    selection.color: theme.accent
                     color: page.colours.length ? page.colours[page.colourAt[page.pen.id] || 0].value : "#1d1d1f"
                     penWidth: page.tools && page.pen ? page.widthOf(page.pen.id) : 0.5
                     eraserWidth: page.tools ? page.widthOf("eraser") : 24

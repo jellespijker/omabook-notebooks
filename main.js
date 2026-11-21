@@ -152,11 +152,14 @@ function removePage(id) {
 }
 
 // A page's ink: its strokes ({id: base64}), what the ink surface did since
-// the pen paused (an ink batch, {add, remove}), and the tools.
+// the pen paused or the lasso let go (an ink batch, {add, remove}), and the
+// tools. A stroke the lasso moved keeps its moment in a recording.
 function strokes(pageId) { return Ink.strokes(pageId); }
 function ink(pageId, batch) {
+    const moved = Recordings.carried(pageId, batch);
     const count = Ink.write(pageId, batch);
     Recordings.inked(String(pageId), batch && batch.add);
+    Recordings.stamp(moved);
     return count;
 }
 function inkTools() { return Ink.tools(); }

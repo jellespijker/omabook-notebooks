@@ -179,6 +179,11 @@ def check(bench, step):
         travelling(bench, step, page, recording)
         again = bench.ok("keepRecording", page, {"file": put(bench, "rtest2.opus", opus.recording(STARTED, 4_000))})
         assert bench.ok("recordings", page)["moments"][ids["early"]] == {"recording": again, "at": 2_000}
+        moved = strokes.batch(strokes.line(50, 30, began=T0 + 2_000), remove=[ids["early"]])
+        bench.ok("ink", page, moved)
+        moments = bench.ok("recordings", page)["moments"]
+        assert ids["early"] not in moments and moments[next(iter(moved["add"]))] == {"recording": again, "at": 2_000}, moments
+        step("a stroke moved with the lasso keeps its moment in the recording, so it still plays what was said")
         bench.ok("removeNotebook", made["notebook"])
         assert not os.path.exists(os.path.join(bench.plugin, "data", "recordings", "rtest2.opus"))
         step("a recording kept from its file alone is stamped from the moment it says; it goes when its notebook does")
