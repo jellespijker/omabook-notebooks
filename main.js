@@ -15,6 +15,9 @@
 // 1. The parts, lowest first: each file makes one global and may use the
 //    ones above it.
 omabook.include("lib/util.js");      // Util: small helpers
+omabook.include("lib/inflate.js");   // Inflate: what zlib packed, unpacked (a PNG's pixels)
+omabook.include("lib/images.js");    // Images: a PNG's or a JPEG's bytes, as a PDF takes a picture
+omabook.include("lib/pdf.js");       // Pdf: a PDF file written, of lines, text and pictures
 omabook.include("lib/paper.js");     // Paper: kinds and sizes of paper, and what each draws
 omabook.include("lib/typed.js");     // Typed: a text block's words, plain or Markdown, never HTML
 omabook.include("lib/store.js");     // Store: notebooks, pages and what is on them in the change log
@@ -29,6 +32,12 @@ omabook.include("lib/references.js"); // References: place references, from a pa
 omabook.include("lib/snapshot.js");  // Snapshot: the notebook file and its book format
 omabook.include("lib/shelf.js");     // Shelf: notebooks in the library, and the view's overview
 omabook.include("lib/mentions.js");  // Mentions: what the pages are about, in the knowledge graph
+omabook.include("lib/pdfexport.js"); // PdfExport: pages drawn as a PDF, ink as lines
+omabook.include("lib/markdownexport.js"); // MarkdownExport: pages' words as Markdown, pictures beside it
+omabook.include("lib/exports.js");   // Exports: the pages chosen, saved as PDF or Markdown
+omabook.include("lib/prompts.js");   // Prompts: every word sent to a model
+omabook.include("lib/ai.js");        // Ai: the model the person chose, its answers checked
+omabook.include("lib/asking.js");    // Asking: a question about a notebook, from its own words
 
 // 2. What the plugin adds to Omabook.
 
@@ -105,6 +114,13 @@ function setNotebookShared(id, shared) {
     Store.changeNotebook(id, {private: shared !== true});
     Shelf.refresh(id);
     return Store.notebook(id);
+}
+
+// Whether the AI may read a notebook (#9): its handwriting recognised by a
+// hosted server, and questions about it asked of the model Omabook's
+// settings chose (Asking). The same as `hosted` of its recognition.
+function setNotebookReading(id, allowed) {
+    return Store.changeNotebook(id, {hosted: allowed === true});
 }
 
 function setNotebookPaper(id, paper) {
@@ -339,3 +355,15 @@ function removeReference(id) {
 function snapshot(id) { return Snapshot.build(id); }
 function readSnapshot(text) { return Snapshot.read(text); }
 function snapshotText(snapshot) { return Snapshot.text(Snapshot.read(JSON.stringify(snapshot))); }
+
+// A notebook, "" for the loose notes, exported (#9): a promise of where it
+// was saved, {format, file, path, folder, pages, ...}. `options` {format
+// ("pdf", the default, or "markdown"), pages (ids; all when not given),
+// name}. Saved under the plugin's data/exports/, as Omabook doesn't yet let a
+// plugin ask where to save.
+function exportNotebook(id, options) { return Exports.save(id, options); }
+
+// A question about a notebook (#9), "" for a summary: a promise of {answer,
+// pages, cut, said}, from the notebook's own words alone, once the person let
+// the AI read it (setNotebookReading). `options` {pages: [ids]}.
+function askNotebook(id, question, options) { return Asking.ask(id, question, options); }

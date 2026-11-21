@@ -23,9 +23,11 @@ class FakeServer:
                 with server.lock:
                     server.received.append({"line": f"{self.command} {self.path}", "body": body})
                     status, reply = server.replies.pop(0) if server.replies else (500, {"error": {"message": "nothing queued"}})
-                data = json.dumps(reply).encode()
+                # A chat answer comes as server-sent events, as a server streams it (answer()).
+                streamed = isinstance(reply, bytes)
+                data = reply if streamed else json.dumps(reply).encode()
                 self.send_response(status)
-                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Type", "text/event-stream" if streamed else "application/json")
                 self.send_header("Content-Length", str(len(data)))
                 self.send_header("Connection", "close")
                 self.end_headers()
@@ -49,6 +51,14 @@ class FakeServer:
         """Queues what the vision model 'reads' in the next picture of ink it is shown."""
         with self.lock:
             self.replies.append((200, {"model": model, "choices": [{"message": {"role": "assistant", "content": text}}]}))
+
+    def answer(self, text, model="chat-model"):
+        """Queues the next answer to a chat, streamed in two pieces as `data:` events and `[DONE]`."""
+        half = len(text) // 2
+        events = [{"model": model, "choices": [{"delta": {"content": piece}}]} for piece in (text[:half], text[half:])]
+        body = "".join(f"data: {json.dumps(one)}\n\n" for one in events) + "data: [DONE]\n\n"
+        with self.lock:
+            self.replies.append((200, body.encode()))
 
     def hear(self, words, model="whisper-1"):
         """Queues what the transcription endpoint 'hears' in the next recording: words of (text, start s, end s),

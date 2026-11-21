@@ -10,6 +10,8 @@ import Omabook
 // chosen is opened to write on (InkPage, #3), and Backspace goes back from
 // it to the pages. A page's thumbnail shows its ink, text blocks and pictures.
 // Over the list, words are found in every notebook (NotebookFind, #7).
+// Under a notebook's title it is exported (NotebookExport) and asked about
+// (NotebookAsk, #9).
 //
 // Beside a book (#8: Alt+N while reading, or the page's ⋯), the reader is
 // on one side and this on the other: over the list, every page that refers
@@ -49,6 +51,8 @@ FocusScope {
     property string opened: ""
     property string problem: ""
     property int asked: -1
+    // What is open under the notebook's title (#9): "export", "ask" or "".
+    property string tool: ""
 
     readonly property var shown: {
         if (chosen === "")
@@ -103,7 +107,7 @@ FocusScope {
             forceActiveFocus()
         }
     }
-    onChosenChanged: openPage("")
+    onChosenChanged: { openPage(""); tool = "" }
     Component.onDestruction: if (opened !== "") inkPage.leave()
     onVisibleChanged: if (!visible && opened !== "") inkPage.leave()
 
@@ -252,6 +256,10 @@ FocusScope {
                              onClicked: view.ask("addPage", [view.shown.id, view.paperChosen()]) }
                     Action { visible: view.shown && !view.shown.loose && view.shown.book > 0; text: "Read"
                              onClicked: reader.openBook(view.shown.book) }
+                    Action { text: "Export"; checkable: true; checked: view.tool === "export"
+                             onClicked: view.tool = checked ? "export" : "" }
+                    Action { visible: view.shown && !view.shown.loose; text: "Ask"; checkable: true; checked: view.tool === "ask"
+                             onClicked: view.tool = checked ? "ask" : "" }
                     Action { visible: view.shown && !view.shown.loose; text: "Remove notebook"
                              onClicked: view.ask("removeNotebook", [view.shown.id]) }
                 }
@@ -261,11 +269,28 @@ FocusScope {
                     color: theme.colors.muted
                 }
 
+                NotebookExport {
+                    Layout.fillWidth: true
+                    visible: view.tool === "export"
+                    plugin: view.plugin
+                    notebook: view.shown
+                    page: view.opened
+                }
+                NotebookAsk {
+                    Layout.fillWidth: true
+                    visible: view.tool === "ask" && !!view.shown && !view.shown.loose
+                    plugin: view.plugin
+                    notebook: view.shown
+                    onChanged: view.reload()
+                }
+
                 // The page open, written on.
                 RowLayout {
                     Layout.fillWidth: true
                     visible: view.opened !== ""
                     Action { text: "← Pages"; onClicked: view.back() }
+                    Action { text: "Export"; checkable: true; checked: view.tool === "export"
+                             onClicked: view.tool = checked ? "export" : "" }
                     Label {
                         Layout.fillWidth: true
                         text: view.openedAt >= 0 ? (view.shown.loose ? "Note " : "Page ") + (view.openedAt + 1) + " of "
