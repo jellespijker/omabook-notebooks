@@ -16,7 +16,8 @@ workspace's `AGENTS.md` first.
 - Storyteller ([omabook-storyteller](https://github.com/jellespijker/omabook-storyteller)) is the worked
   example of a plugin; the harness here is its harness.
 
-JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml` and `PaperSheet.qml`), and Python
+JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageContent.qml`, `ContentItem.qml`,
+`PictureImport.qml` and `PaperSheet.qml`), and Python
 tests.
 
 ## The harness
@@ -39,8 +40,10 @@ Once per clone: `uvx pre-commit install`. Before handing work in: `bin/check`. N
 ## Testing
 
 ```bash
-python3 tests/run.py     # notebooks, pages, paper and ink; needs omabook on the PATH, or OMABOOK=/path/to/omabook
+python3 tests/run.py     # notebooks, pages, paper, ink, text blocks and pictures; needs omabook on the PATH, or OMABOOK=/path/to/omabook
 ```
 
-It passes before a ticket lands, and needs no window. It needs an Omabook as new as `plugin.json` says.
+It passes before a ticket lands, and needs no window. The QML is checked with
+`/usr/lib/qt6/bin/qmllint`: a new file has no warning but `backend`, `theme` and `Omabook`, which only
+Omabook provides. It needs an Omabook as new as `plugin.json` says.
 A change someone using the plugin would notice gets a line in `CHANGELOG.md` under *Unreleased*.

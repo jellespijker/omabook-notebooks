@@ -15,10 +15,21 @@ import Omabook
 // change log. Points are millimetres of the page, `inkScale` the pixels to
 // one at this zoom. Leaving the page, its notebook's file is written once.
 //
+// Text blocks and pictures (#4) lie below the ink or above it, each a
+// ContentItem; with the Type tool the ink rests and they are arranged: a tap
+// on the paper puts a text block there, a tap chooses one, dragging moves
+// it, its corner resizes it, a double tap types in it. A picture comes from
+// a file, picked (I) or dropped on the page (PictureImport).
+//
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
 // Ctrl+Z and Ctrl+Shift+Z undo and redo, Page Up and Page Down the page
-// before and after, Backspace back to the pages.
+// before and after, Backspace back to the pages. T the Type tool, I a
+// picture from a file; with the Type tool, Tab and Shift+Tab choose, Enter
+// types in the one chosen (or in a new block), Escape or Ctrl+Enter is done
+// typing, the arrows move (Shift: further), Alt and the arrows resize,
+// Delete removes, L puts it above or below the ink, [ and ] to the back or
+// the front, M makes a text block Markdown or plain text.
 FocusScope {
     id: page
 
@@ -33,7 +44,7 @@ FocusScope {
     signal turn(int by)
 
     readonly property var tools: plugin === "" ? null : backend.scripts.call(plugin, "inkTools", [])
-    // "pen", "highlighter" or "eraser".
+    // "pen", "highlighter", "eraser" or "type".
     property string tool: "pen"
     property var colourAt: ({pen: 0, highlighter: 0})
     property var widthAt: ({})
@@ -41,8 +52,10 @@ FocusScope {
     property string problem: ""
     // The writes asked of the script and not answered yet.
     property var asked: ({})
+    // What is on the page but its ink: text blocks and pictures.
+    readonly property var chosenItem: pageContent.chosenItem
 
-    readonly property var pen: tools ? tools.pens.find(function (one) { return one.id === (page.tool === "eraser" ? "pen" : page.tool) }) : null
+    readonly property var pen: tools ? tools.pens.find(function (one) { return one.id === (page.tool === "eraser" || page.tool === "type" ? "pen" : page.tool) }) : null
     readonly property var colours: tools && pen ? tools.colours[pen.id] : []
     readonly property real fit: Math.max(0.5, (flick.width - 24) / sheet.layout.width)
 
@@ -52,12 +65,13 @@ FocusScope {
         return one.width
     }
     function choose(id) {
+        if (id !== "type") { pageContent.chosen = ""; pageContent.editing = "" }
         if (id === "eraser" && tool === "eraser")
             surface.eraser = surface.eraser === InkSurface.Parts ? InkSurface.Strokes : InkSurface.Parts
         tool = id
     }
     function chooseColour(at) {
-        if (tool === "eraser") tool = "pen"
+        if (tool === "eraser" || tool === "type") choose("pen")
         if (at < 0 || at >= colours.length) return
         const next = Object.assign({}, colourAt)
         next[pen.id] = at
@@ -65,6 +79,7 @@ FocusScope {
     }
     // A step thinner (-1) or thicker (1) of what the tool comes in.
     function thicker(by) {
+        if (tool === "type") { pageContent.arrange(by < 0 ? "back" : "front"); return }
         const one = tool === "eraser" ? tools.eraser : pen
         const at = Math.max(0, Math.min(one.widths.length - 1, one.widths.indexOf(widthOf(tool)) + by))
         const next = Object.assign({}, widthAt)
@@ -83,7 +98,16 @@ FocusScope {
         if (!entry) return
         surface.flush()
         surface.load(backend.scripts.call(plugin, "strokes", [entry.id]) || {})
+        pageContent.reload()
     }
+    function ask(fn, args) {
+        const id = backend.scripts.request(plugin, fn, args)
+        const next = Object.assign({}, page.asked)
+        next[id] = true
+        page.asked = next
+    }
+    // The point of the paper under a pointer, in millimetres of the page.
+    function onPaper(point) { return {x: point.x / sheet.unit, y: point.y / sheet.unit} }
     // Done with the page: what waits goes, and the notebook's file follows.
     function leave() {
         if (!entry) return
@@ -129,6 +153,10 @@ FocusScope {
         withCtrl[Qt.Key_Plus] = function () { page.zoomBy(1.25) }
         withCtrl[Qt.Key_Minus] = function () { page.zoomBy(0.8) }
         withCtrl[Qt.Key_0] = function () { page.zoom = 1 }
+        plain[Qt.Key_T] = function () { page.choose("type") }
+        plain[Qt.Key_I] = pageContent.pickPicture
+        if (page.tool === "type")
+            Object.assign(plain, pageContent.keys(event))
         const one = ctrl ? withCtrl[event.key] : plain[event.key]
         if (!ctrl && event.key >= Qt.Key_1 && event.key <= Qt.Key_4) {
             page.chooseColour(event.key - Qt.Key_1)
@@ -137,6 +165,39 @@ FocusScope {
             one()
             event.accepted = true
         }
+    }
+
+    // What lies below the ink, or above it, lowest first.
+    component Layer: Item {
+        id: lying
+        required property string kind
+        anchors.fill: parent
+        Repeater {
+            model: pageContent.lying(lying.kind)
+            delegate: ContentItem {
+                required property var modelData
+                item: modelData
+                plugin: page.plugin
+                unit: sheet.unit
+                step: pageContent.content.typing.step
+                arranging: page.tool === "type"
+                chosen: pageContent.chosen === item.id
+                editing: pageContent.editing === item.id
+                onChoose: { pageContent.chosen = item.id; if (pageContent.editing !== item.id) page.takeFocus() }
+                onEdit: { pageContent.chosen = item.id; pageContent.editing = item.id }
+                onPlaced: (rectangle) => pageContent.placeItem(item.id, rectangle)
+                onTyped: (text, needs) => pageContent.typed(item.id, text, needs)
+            }
+        }
+    }
+
+    PageContent {
+        id: pageContent
+        plugin: page.plugin
+        pageId: page.pageId
+        onProblem: (why) => page.problem = why
+        onDoneTyping: page.takeFocus()
+        onPictureAdded: { page.problem = ""; page.choose("type") }
     }
 
     component Tool: Button {
@@ -169,8 +230,20 @@ FocusScope {
                 highlighted: page.tool === "eraser"
                 onClicked: page.choose("eraser")
             }
+            Tool { text: "Type (T)"; highlighted: page.tool === "type"; onClicked: page.choose("type") }
+            Tool { text: "Picture… (I)"; onClicked: pageContent.pickPicture() }
+            Tool { text: "Above ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "below"; onClicked: pageContent.arrange("above") }
+            Tool { text: "Below ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "above"; onClicked: pageContent.arrange("below") }
+            Tool { text: "To the back ["; visible: !!page.chosenItem; onClicked: pageContent.arrange("back") }
+            Tool { text: "To the front ]"; visible: !!page.chosenItem; onClicked: pageContent.arrange("front") }
+            Tool {
+                visible: !!page.chosenItem && page.chosenItem.kind === "text"
+                text: (page.chosenItem && page.chosenItem.format === "plain" ? "Plain text" : "Markdown") + " (M)"
+                onClicked: pageContent.toggleFormat()
+            }
+            Tool { text: "Remove (Delete)"; visible: !!page.chosenItem; onClicked: pageContent.removeChosen() }
             Repeater {
-                model: page.colours
+                model: page.tool === "type" ? [] : page.colours
                 delegate: Item {
                     id: swatch
                     required property var modelData
@@ -196,8 +269,8 @@ FocusScope {
                     TapHandler { onTapped: page.chooseColour(swatch.index) }
                 }
             }
-            Tool { text: "Thinner ["; onClicked: page.thicker(-1) }
-            Tool { text: "Thicker ]"; onClicked: page.thicker(1) }
+            Tool { text: "Thinner ["; visible: page.tool !== "type"; onClicked: page.thicker(-1) }
+            Tool { text: "Thicker ]"; visible: page.tool !== "type"; onClicked: page.thicker(1) }
             Tool { text: "Undo"; enabled: surface.canUndo; onClicked: surface.undo() }
             Tool { text: "Redo"; enabled: surface.canRedo; onClicked: surface.redo() }
             Tool { text: "Clear page"; enabled: surface.count > 0; onClicked: surface.clear() }
@@ -244,6 +317,18 @@ FocusScope {
                 width: layout.width * page.fit * page.zoom
                 height: implicitHeight
 
+                // A tap on the paper, with the Type tool, puts a text block there.
+                TapHandler {
+                    enabled: page.tool === "type" && pageContent.editing === ""
+                    onTapped: (point) => {
+                        const at = page.onPaper(point.position)
+                        if (pageContent.hit(at)) return
+                        if (pageContent.chosen !== "") pageContent.chosen = ""
+                        else pageContent.newText(at)
+                    }
+                }
+                Layer { kind: "below" }
+
                 InkSurface {
                     id: surface
                     objectName: "pageInk"
@@ -251,18 +336,27 @@ FocusScope {
                     inkScale: sheet.unit
                     tool: page.tool === "eraser" ? InkSurface.Eraser : InkSurface.Pen
                     color: page.colours.length ? page.colours[page.colourAt[page.pen.id] || 0].value : "#1d1d1f"
-                    penWidth: page.tools && page.tool !== "eraser" ? page.widthOf(page.tool) : 0.5
+                    penWidth: page.tools && page.pen ? page.widthOf(page.pen.id) : 0.5
                     eraserWidth: page.tools ? page.widthOf("eraser") : 24
                     batchPause: 600
-                    readOnly: !page.entry
+                    readOnly: !page.entry || page.tool === "type"
                     Accessible.role: Accessible.Graphic
                     Accessible.name: page.entry ? (page.entry.title + ", " + surface.count + (surface.count === 1 ? " stroke" : " strokes")) : ""
                     onInked: (batch) => {
                         if (!page.entry) return
-                        const id = backend.scripts.request(page.plugin, "ink", [page.entry.id, batch])
-                        const next = Object.assign({}, page.asked)
-                        next[id] = true
-                        page.asked = next
+                        page.ask("ink", [page.entry.id, batch])
+                    }
+                }
+                Layer { kind: "above" }
+
+                // A picture file dropped on the page goes where it was dropped.
+                DropArea {
+                    anchors.fill: parent
+                    keys: ["text/uri-list"]
+                    onDropped: (drop) => {
+                        if (!drop.hasUrls || !page.entry) return
+                        pageContent.takePicture(drop.urls[0], page.onPaper(Qt.point(drop.x, drop.y)))
+                        drop.acceptProposedAction()
                     }
                 }
             }

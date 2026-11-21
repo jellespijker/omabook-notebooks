@@ -8,7 +8,7 @@ import Omabook
 // its paper. Narrow (beside the page, or a small window) it shows one of the
 // two at a time, and Backspace goes from the pages back to the list. A page
 // chosen is opened to write on (InkPage, #3), and Backspace goes back from
-// it to the pages.
+// it to the pages. A page's thumbnail shows its ink, text blocks and pictures.
 //
 // It holds no logic of its own: what it shows comes from the script
 // (`notebooks()`, `paper()`), and what is done is asked of it. A call that
@@ -274,6 +274,21 @@ FocusScope {
                             height: implicitHeight
                             plugin: view.plugin
                             paper: modelData.paper
+                            // Its text blocks and pictures (#4), read again whenever the overview is.
+                            readonly property var held: {
+                                view.overview
+                                return backend.scripts.call(view.plugin, "content", [modelData.id]) || {typing: {step: 7.1}, items: []}
+                            }
+                            Repeater {
+                                model: thumb.held.items.filter(function (one) { return one.layer === "below" })
+                                delegate: ContentItem {
+                                    required property var modelData
+                                    item: modelData
+                                    plugin: view.plugin
+                                    unit: thumb.unit
+                                    step: thumb.held.typing.step
+                                }
+                            }
                             InkSurface {
                                 anchors.fill: parent
                                 readOnly: true
@@ -285,6 +300,16 @@ FocusScope {
                                 }
                                 onKeptChanged: load(kept)
                                 Component.onCompleted: load(kept)
+                            }
+                            Repeater {
+                                model: thumb.held.items.filter(function (one) { return one.layer === "above" })
+                                delegate: ContentItem {
+                                    required property var modelData
+                                    item: modelData
+                                    plugin: view.plugin
+                                    unit: thumb.unit
+                                    step: thumb.held.typing.step
+                                }
                             }
                             MouseArea {
                                 anchors.fill: parent

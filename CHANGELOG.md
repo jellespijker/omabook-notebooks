@@ -17,3 +17,11 @@ Omabook it needs.
   a finger and the mouse as a fallback; keys for every tool. Strokes are kept per page in the change log,
   one write a pause of the pen, so two computers' strokes on one page merge. The pages' thumbnails show their
   ink, and paper is drawn in paper's colours in a dark theme too, so ink reads as it was written.
+- Text blocks and pictures on a page (#4): with the Type tool (T) a tap on the paper, or Enter, puts a text
+  block there, set on the paper's lines, typed in where it is as Markdown or plain text (M; never HTML);
+  blocks and pictures are chosen with a tap or Tab, moved by dragging or the arrows, resized by their corner
+  or Alt and the arrows, put above or below the ink (L) and to the front or back ([ ]), and removed
+  (Delete). A picture comes from a file, picked (I) or dropped on the page, made at most 1600 pixels a side
+  and 1 MB, without what the file said of where it was taken. Each is kept in the change log, so they merge
+  between computers: a block moved on one and typed in on the other keeps both, and pictures travel with
+  their page. Thumbnails show them too.
