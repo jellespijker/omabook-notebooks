@@ -19,6 +19,9 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | Part | What it is for |
 |---|---|
 | `Util` | helpers: know nothing of notebooks |
+| `Inflate` | what zlib's deflate packed, unpacked: a PNG's pixels |
+| `Images` | a PNG's or a JPEG's bytes as a PDF takes a picture |
+| `Pdf` | a PDF file written: pages of lines, text, pictures and links; knows nothing of notebooks |
 | `Paper` | the kinds of paper and sizes, and what each draws, in millimetres |
 | `Typed` | a text block's words: plain text or Markdown, cleaned, never HTML |
 | `Store` | **the live data**: notebooks, pages, text blocks, pictures, recognised text, recordings, transcripts, mentions and place references as things in `omabook.log` (ADR 0002) |
@@ -33,6 +36,12 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Snapshot` | the notebook file: written from the store, read back, and its book format |
 | `Shelf` | a notebook as an item in the library, and what the view is shown |
 | `Mentions` | what a page is about in the knowledge graph (`omabook.graph`): suggested, said by hand, tied to the notebook's book |
+| `PdfExport` | a notebook's pages drawn as a PDF: paper, ink as lines, text, pictures, references as links |
+| `MarkdownExport` | a notebook's pages' words as Markdown, pictures as files beside it |
+| `Exports` | the pages chosen, saved as PDF or Markdown under `data/exports/` |
+| `Prompts` | every word sent to a model |
+| `Ai` | the one way to the model the person chose (`omabook.ai`), its answers checked |
+| `Asking` | a question about a notebook, from its own words, under recognition's privacy rule |
 | `main.js` | the front door: registers the format, the view, commands and events |
 
 `main.js` stays a list of registrations and thin functions that call the parts;

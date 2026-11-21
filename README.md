@@ -44,6 +44,11 @@ and comes as 1.0 with Omabook 0.2.0.
   (`Shift+B` to the words you copied in the reader): a chip on the page that opens the book at that passage
   (`G`), found again by its words when the book's file changes. In a shared notebook a reference never
   shows what lies past where you have read to.
+- **Export.** A notebook, or the page open, as a PDF (paper and ink as lines, typed text, pictures, place
+  references as links) or as Markdown (typed text, the handwriting's words, what was said, pictures as files,
+  place references as links), saved under the plugin's `data/exports/`.
+- **Ask about a notebook.** A question, or a summary, answered by the AI chosen in Omabook's settings from
+  the notebook's own words, and of its books only what you have read; only for a notebook you let it read.
 - **Loose notes.** A page of no notebook, filed into one later (or taken out again).
 - **Live in the change log.** Notebooks and pages are kept as operations in Omabook's change log, so they
   go to your other computers and merge there; the notebook file is a snapshot written from them.
@@ -57,6 +62,8 @@ omabook plugin run notebooks paper '[{"kind": "cornell", "size": "Letter"}]'   #
 omabook plugin run notebooks strokes '["<page id>"]'                           # a page's ink, {id: base64}
 omabook plugin run notebooks recognise '["<page id>", {}]'                     # its handwriting read to text
 omabook plugin run notebooks setNotebookRecognition '["<notebook id>", {"hosted": true}]'
+omabook plugin run notebooks exportNotebook '["<notebook id>", {"format": "markdown"}]'
+omabook plugin run notebooks askNotebook '["<notebook id>", "What did I write about tides?"]'
 ```
 
 - **Private.** A notebook stays on your computers; it goes into a shared space only when you switch it on.

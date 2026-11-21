@@ -19,7 +19,7 @@ workspace's `AGENTS.md` first.
 JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageTools.qml`,
 `PageReferences.qml`, `BookReferences.qml`, `PageContent.qml`, `ContentItem.qml`,
 `PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml`,
-`PageAbout.qml`, `NotebookFind.qml` and `PaperSheet.qml`), and Python
+`PageAbout.qml`, `NotebookFind.qml`, `NotebookExport.qml`, `NotebookAsk.qml` and `PaperSheet.qml`), and Python
 tests.
 
 ## The harness
@@ -42,12 +42,12 @@ Once per clone: `uvx pre-commit install`. Before handing work in: `bin/check`. N
 ## Testing
 
 ```bash
-python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures, recognised text, recordings, search, the graph and place references; needs omabook on the PATH, or OMABOOK=/path/to/omabook
+python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures, recognised text, recordings, search, the graph, place references, exports and asking; needs omabook on the PATH, or OMABOOK=/path/to/omabook
 ```
 
 Recognition is tested against a stand-in AI server on this computer (`tests/fakeserver.py`, as Omabook's
 `tests/fakeaiserver.h`), which the scratch config.json points at; nothing is sent anywhere else. So are
-transcripts; a recording comes in as an Opus file the tests write (`tests/opus.py`), since from a command line
+transcripts and questions about a notebook; a recording comes in as an Opus file the tests write (`tests/opus.py`), since from a command line
 nobody can say yes to the microphone.
 
 It passes before a ticket lands, and needs no window. The QML is checked with

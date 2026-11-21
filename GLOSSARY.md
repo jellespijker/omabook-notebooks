@@ -98,6 +98,11 @@ The part of the knowledge graph that holds what was found in one notebook, linke
 things tied to the notebook's book, in the graph of the collections the notebook is in.
 _Avoid_: Notes graph, layer
 
+**Export**:
+A notebook, or pages of it, saved as a PDF (as the pages look) or as Markdown (their words, pictures beside
+them), for reading and keeping outside Omabook. A copy: never read back into the notebook.
+_Avoid_: Snapshot (the notebook's own file), backup
+
 **Mention**:
 A thing of the knowledge graph the person said a page is about, by hand or by saying yes to one the page
 names; it ties the thing to the notebook's book.

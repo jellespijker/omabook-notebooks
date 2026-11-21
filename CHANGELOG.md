@@ -66,3 +66,15 @@ Omabook it needs.
   kept as lost, never guessed at. In a notebook shared with others, a reference never shows what lies past
   where you have read to. The notebook's book names the passages its pages refer to. Needs the `clipboard`
   permission, for the copied words.
+- Export to PDF and Markdown, and the AI reading notebooks (#9): Export under a notebook's title saves the
+  notebook, or the page open, as a PDF (each page at its paper's size: the paper and the ink as lines, so they
+  print sharp, typed text as text, pictures, the handwriting's recognised words unseen so they can be found and
+  copied, and place references as links) or as Markdown (typed text, the handwriting's words, what was said
+  with its moments, pictures as files beside it, place references as links with the words they refer to), by
+  the name you give it. Omabook doesn't yet let a plugin ask where to save, so it is saved in the plugin's own
+  folder, under `data/exports/`, which the view opens. Ask under a notebook's title asks the AI chosen in
+  Omabook's settings about the notebook ("what did I write about tides?"), or summarises it: it reads the
+  notebook's own words alone, and of the books it refers to only the passages up to where you have read. A
+  notebook is private: the AI reads it only once you let it (*Let the AI read this notebook*, the same choice
+  as a hosted server reading its handwriting), what was said while writing only when its recordings may go
+  too, and nothing is sent with the AI off. From the command line: `exportNotebook` and `askNotebook`.
