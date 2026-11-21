@@ -70,31 +70,43 @@ def cornell(drawn, width, height):
     assert len(column) == 1 and near(column[0]["x1"], width * 0.3, 0.01), (drawn["title"], column)
     assert len(across) == 2 and near(across[1], height * 0.8, 0.01), (drawn["title"], across)
     assert near(column[0]["y1"], across[0]) and near(column[0]["y2"], across[1]), (drawn["title"], "the column runs from title to summary")
-    ruled = rows(drawn, "rule")
-    above = [y for y in ruled if y < across[1]]
-    below = [y for y in ruled if y > across[1]]
-    assert above and below and all(near(step, 7.1, 0.03) for step in steps(above) + steps(below)), (drawn["title"], ruled)
+    cornell_rules(drawn, rows(drawn, "rule"), across[1])
+
+
+def cornell_rules(drawn, ruled, summary):
+    above = [y for y in ruled if y < summary]
+    below = [y for y in ruled if y > summary]
+    assert above and below, (drawn["title"], ruled)
+    assert all(near(step, 7.1, 0.03) for step in steps(above) + steps(below)), (drawn["title"], ruled)
+
+
+def blank(drawn, width, height):
+    assert drawn["lines"] == [] and drawn["dots"] is None, drawn
+
+
+KINDS = {"squared": grid, "dotted": dotted, "blank": blank, "staves": staves, "cornell": cornell}
+
+
+def every_paper():
+    for size, (width, height) in SIZES.items():
+        for kind in ("lined", "squared", "dotted", "blank", "staves", "cornell"):
+            for ruling in RULINGS if kind == "lined" else [None]:
+                asked = {"kind": kind, "size": size} | ({"ruling": ruling} if ruling else {})
+                yield asked, width, height
 
 
 def check(bench, step):
     papers = bench.ok("papers")
     assert [kind["id"] for kind in papers["kinds"]] == ["lined", "squared", "dotted", "blank", "staves", "cornell"], papers
     assert papers["sizes"] == ["A4", "A5", "Letter"] and papers["rulings"] == ["narrow", "college", "wide"], papers
-    for size, (width, height) in SIZES.items():
-        for kind in ("lined", "squared", "dotted", "blank", "staves", "cornell"):
-            for ruling in RULINGS if kind == "lined" else [None]:
-                asked = {"kind": kind, "size": size} | ({"ruling": ruling} if ruling else {})
-                drawn = bench.ok("paper", asked)
-                assert drawn["paper"] == asked and drawn["width"] == width and drawn["height"] == height, drawn
-                on_sheet(drawn, width, height)
-                if kind == "lined":
-                    lined(drawn, width, height, ruling)
-                elif kind in ("squared", "dotted"):
-                    (grid if kind == "squared" else dotted)(drawn, width, height)
-                elif kind == "blank":
-                    assert drawn["lines"] == [] and drawn["dots"] is None, drawn
-                else:
-                    (staves if kind == "staves" else cornell)(drawn, width, height)
+    for asked, width, height in every_paper():
+        drawn = bench.ok("paper", asked)
+        assert drawn["paper"] == asked and drawn["width"] == width and drawn["height"] == height, drawn
+        on_sheet(drawn, width, height)
+        if asked["kind"] == "lined":
+            lined(drawn, width, height, asked["ruling"])
+        else:
+            KINDS[asked["kind"]](drawn, width, height)
     step("every paper (lined narrow, college and wide; squared; dotted; blank; staves; Cornell) draws right at A4, A5 and Letter")
     assert bench.ok("paper", {}) == bench.ok("paper", {"kind": "lined", "ruling": "college", "size": "A5"})
     assert "ruling" not in bench.ok("paper", {"kind": "squared", "ruling": "wide"})["paper"]

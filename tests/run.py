@@ -52,7 +52,7 @@ def making(bench, step):
     made = bench.ok("makeNotebook", "Physics", {"kind": "squared", "size": "A4"})
     book, notebook = made["book"], made["notebook"]
     listed = bench.books()[book]
-    assert listed["title"] == "Physics" and listed["identifiers"]["generated"] == NAME and listed["identifiers"]["notebook"] == notebook, listed
+    assert listed["title"] == "Physics" and listed["identifiers"] == {"generated": NAME, "notebook": notebook}, listed
     shown = notebook_named(bench, "Physics")
     assert shown["id"] == notebook and shown["book"] == book and shown["private"] is True, shown
     assert [page["paper"] for page in shown["pages"]] == [{"kind": "squared", "size": "A4"}], shown
@@ -85,7 +85,7 @@ def making(bench, step):
 
     bench.ok("setPaper", two, {"kind": "cornell", "size": "A4"})
     assert [page["paper"] for page in notebook_named(bench, "Physics")["pages"] if page["id"] == two] == [{"kind": "cornell", "size": "A4"}]
-    assert "no paper called \"graph\"" in bench.refused("setPaper", two, {"kind": "graph"})
+    assert 'no paper called "graph"' in bench.refused("setPaper", two, {"kind": "graph"})
     assert "A4, A5 or Letter" in bench.refused("addPage", notebook, {"kind": "lined", "size": "B5"})
     step("a page's paper is changed; a paper or a size there isn't is refused, saying what there is")
 
@@ -181,7 +181,7 @@ def main():
 
     def step(title):
         passed.append(title)
-        print("ok %2d  %s" % (len(passed), title), flush=True)
+        print(f"ok {len(passed):2d}  {title}", flush=True)
 
     try:
         setup(bench, step)
@@ -190,7 +190,7 @@ def main():
         other = loose(bench, step, physics)
         removing(bench, step, physics, other)
         snapshots(bench, step)
-        print("\nAll %d steps passed." % len(passed))
+        print(f"\nAll {len(passed)} steps passed.")
         if "--keep" in sys.argv:
             print("The scratch folder is kept: " + bench.scratch)
         else:
@@ -200,11 +200,11 @@ def main():
         import traceback
 
         line = traceback.extract_tb(error.__traceback__)[-1]
-        print("\nFAILED after %d steps, at line %d (%s): %s" % (len(passed), line.lineno, line.line, error))
+        print(f"\nFAILED after {len(passed)} steps, at line {line.lineno} ({line.line}): {error}")
         print("The scratch folder is kept: " + bench.scratch)
         return 1
     except subprocess.TimeoutExpired as error:
-        print("\nFAILED after %d steps: Omabook did not come back: %s" % (len(passed), error))
+        print(f"\nFAILED after {len(passed)} steps: Omabook did not come back: {error}")
         print("The scratch folder is kept: " + bench.scratch)
         return 1
 
