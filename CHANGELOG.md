@@ -42,3 +42,13 @@ Omabook it needs.
   one only for a notebook that chose it for speech (apart from handwriting) and when Omabook's settings
   allow hosted servers. Recordings go to your other computers with the plugin's data at a sync. Needs the
   `microphone` permission and an Omabook with `omabook.audio` (#79) and binary data files (#131).
+- The notebook in search and the knowledge graph (#7): *Find in notebooks* over the list finds words typed,
+  read from the ink or said, by the start of a word, case and accents aside; a hit opens its page, and one
+  in a recording plays from the moment the words were said. The words read from the ink are in the
+  notebook's book now too, beside the typed text and the transcripts, so Find (/) and the book's text have
+  them. About (K) on a page offers the things of the knowledge graph its words name, to say yes or no to,
+  and finds any other, or makes a new topic: each one said is tied to the notebook's book with the pages it
+  is on, in the graph of the notebook's collections, so `knows:vin` on the shelf finds the notebook. Nothing
+  goes into the graph unasked and no word goes to a model. Notebooks are books Notebooks keeps private
+  (`"private"` in plugin.json, Omabook #127): nothing of one, its ties in the graph neither, goes into a
+  shared or published space.

@@ -82,5 +82,11 @@ A link from a page, or a part of it, to a place in a book (a chapter or a passag
 _Avoid_: Citation, anchor, bookmark
 
 **Notebook scope**:
-The part of the knowledge graph that holds what was found in one notebook, linked to things elsewhere.
+The part of the knowledge graph that holds what was found in one notebook, linked to things elsewhere: the
+things tied to the notebook's book, in the graph of the collections the notebook is in.
 _Avoid_: Notes graph, layer
+
+**Mention**:
+A thing of the knowledge graph the person said a page is about, by hand or by saying yes to one the page
+names; it ties the thing to the notebook's book.
+_Avoid_: Tag, link, reference (for a mention)

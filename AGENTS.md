@@ -17,8 +17,8 @@ workspace's `AGENTS.md` first.
   example of a plugin; the harness here is its harness.
 
 JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageContent.qml`, `ContentItem.qml`,
-`PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml` and
-`PaperSheet.qml`), and Python
+`PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml`,
+`PageAbout.qml`, `NotebookFind.qml` and `PaperSheet.qml`), and Python
 tests.
 
 ## The harness
@@ -41,7 +41,7 @@ Once per clone: `uvx pre-commit install`. Before handing work in: `bin/check`. N
 ## Testing
 
 ```bash
-python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures, recognised text and recordings; needs omabook on the PATH, or OMABOOK=/path/to/omabook
+python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures, recognised text, recordings, search and the graph; needs omabook on the PATH, or OMABOOK=/path/to/omabook
 ```
 
 Recognition is tested against a stand-in AI server on this computer (`tests/fakeserver.py`, as Omabook's
