@@ -26,6 +26,12 @@ and comes as 1.0 with Omabook 0.2.0.
   `[` and `]` thinner and thicker, `F` what a finger does, `Ctrl+Z` and `Ctrl+Shift+Z`, `Ctrl+=` and
   `Ctrl+-`. Each pause of the pen is one write to the change log, so a page written on two computers has
   both computers' strokes.
+- **Recognised text.** A moment after the pen rests, a page's handwriting is read to text by a vision
+  model on your AI server, in the background, and kept with the strokes it came from; when the ink changes it
+  is read again. `R` shows it under the tools, where it is corrected by typing in it (your words are never
+  written over unless you ask) and made a text block where the ink lies, beside the ink or in its place. The
+  Select tool (`S`) chooses strokes with a rectangle, to be read and made a text block on their own. With no
+  AI server that may read handwriting, the page says so and the ink is kept as it is.
 - **Loose notes.** A page of no notebook, filed into one later (or taken out again).
 - **Live in the change log.** Notebooks and pages are kept as operations in Omabook's change log, so they
   go to your other computers and merge there; the notebook file is a snapshot written from them.
@@ -37,6 +43,8 @@ omabook plugin run notebooks makeNotebook '["Physics", {"kind": "squared", "size
 omabook plugin run notebooks notebooks
 omabook plugin run notebooks paper '[{"kind": "cornell", "size": "Letter"}]'   # what a paper draws, in mm
 omabook plugin run notebooks strokes '["<page id>"]'                           # a page's ink, {id: base64}
+omabook plugin run notebooks recognise '["<page id>", {}]'                     # its handwriting read to text
+omabook plugin run notebooks setNotebookRecognition '["<notebook id>", {"hosted": true}]'
 ```
 
 - **Private.** A notebook stays on your computers; it goes into a shared space only when you switch it on.

@@ -21,6 +21,11 @@ import Omabook
 // it, its corner resizes it, a double tap types in it. A picture comes from
 // a file, picked (I) or dropped on the page (PictureImport).
 //
+// The page's handwriting is read to text a moment after the pen rests
+// (RecognisedText, #6), shown under the tools on request (R); with the
+// Select tool (S) a rectangle dragged over the page chooses strokes, to be
+// read on their own.
+//
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
 // Ctrl+Z and Ctrl+Shift+Z undo and redo, Page Up and Page Down the page
@@ -29,7 +34,8 @@ import Omabook
 // types in the one chosen (or in a new block), Escape or Ctrl+Enter is done
 // typing, the arrows move (Shift: further), Alt and the arrows resize,
 // Delete removes, L puts it above or below the ink, [ and ] to the back or
-// the front, M makes a text block Markdown or plain text.
+// the front, M makes a text block Markdown or plain text. R shows or hides
+// the recognised text, S the Select tool.
 FocusScope {
     id: page
 
@@ -44,18 +50,23 @@ FocusScope {
     signal turn(int by)
 
     readonly property var tools: plugin === "" ? null : backend.scripts.call(plugin, "inkTools", [])
-    // "pen", "highlighter", "eraser" or "type".
+    // "pen", "highlighter", "eraser", "type" or "select".
     property string tool: "pen"
     property var colourAt: ({pen: 0, highlighter: 0})
     property var widthAt: ({})
     property real zoom: 1
+    property bool showText: false
+    // The strokes the Select tool chose, and the rectangle it chose them with (millimetres).
+    property var selection: []
+    property var selected: null
     property string problem: ""
     // The writes asked of the script and not answered yet.
     property var asked: ({})
     // What is on the page but its ink: text blocks and pictures.
     readonly property var chosenItem: pageContent.chosenItem
 
-    readonly property var pen: tools ? tools.pens.find(function (one) { return one.id === (page.tool === "eraser" || page.tool === "type" ? "pen" : page.tool) }) : null
+    readonly property bool resting: tool === "type" || tool === "select"
+    readonly property var pen: tools ? tools.pens.find(function (one) { return one.id === (page.tool === "eraser" || page.resting ? "pen" : page.tool) }) : null
     readonly property var colours: tools && pen ? tools.colours[pen.id] : []
     readonly property real fit: Math.max(0.5, (flick.width - 24) / sheet.layout.width)
 
@@ -66,12 +77,13 @@ FocusScope {
     }
     function choose(id) {
         if (id !== "type") { pageContent.chosen = ""; pageContent.editing = "" }
+        if (id !== "select") { selection = []; selected = null }
         if (id === "eraser" && tool === "eraser")
             surface.eraser = surface.eraser === InkSurface.Parts ? InkSurface.Strokes : InkSurface.Parts
         tool = id
     }
     function chooseColour(at) {
-        if (tool === "eraser" || tool === "type") choose("pen")
+        if (tool === "eraser" || resting) choose("pen")
         if (at < 0 || at >= colours.length) return
         const next = Object.assign({}, colourAt)
         next[pen.id] = at
@@ -80,6 +92,7 @@ FocusScope {
     // A step thinner (-1) or thicker (1) of what the tool comes in.
     function thicker(by) {
         if (tool === "type") { pageContent.arrange(by < 0 ? "back" : "front"); return }
+        if (tool === "select") return
         const one = tool === "eraser" ? tools.eraser : pen
         const at = Math.max(0, Math.min(one.widths.length - 1, one.widths.indexOf(widthOf(tool)) + by))
         const next = Object.assign({}, widthAt)
@@ -108,6 +121,17 @@ FocusScope {
     }
     // The point of the paper under a pointer, in millimetres of the page.
     function onPaper(point) { return {x: point.x / sheet.unit, y: point.y / sheet.unit} }
+    // The strokes that lie within a rectangle of the page, in millimetres.
+    function select(from, to) {
+        const r = {x: Math.min(from.x, to.x), y: Math.min(from.y, to.y), width: Math.abs(to.x - from.x), height: Math.abs(to.y - from.y)}
+        const lying = backend.scripts.call(plugin, "strokeBounds", [pageId]) || {}
+        selected = r
+        selection = Object.keys(lying).filter(function (id) {
+            const b = lying[id]
+            return b.x < r.x + r.width && b.x + b.width > r.x && b.y < r.y + r.height && b.y + b.height > r.y
+        })
+        if (selection.length) showText = true
+    }
     // Done with the page: what waits goes, and the notebook's file follows.
     function leave() {
         if (!entry) return
@@ -116,7 +140,7 @@ FocusScope {
     }
     function takeFocus() { forceActiveFocus() }
 
-    onPageIdChanged: { zoom = 1; problem = ""; reload() }
+    onPageIdChanged: { zoom = 1; problem = ""; selection = []; selected = null; reload() }
     Component.onCompleted: reload()
 
     Connections {
@@ -154,6 +178,8 @@ FocusScope {
         withCtrl[Qt.Key_Minus] = function () { page.zoomBy(0.8) }
         withCtrl[Qt.Key_0] = function () { page.zoom = 1 }
         plain[Qt.Key_T] = function () { page.choose("type") }
+        plain[Qt.Key_S] = function () { page.choose("select") }
+        plain[Qt.Key_R] = function () { page.showText = !page.showText }
         plain[Qt.Key_I] = pageContent.pickPicture
         if (page.tool === "type")
             Object.assign(plain, pageContent.keys(event))
@@ -231,6 +257,8 @@ FocusScope {
                 onClicked: page.choose("eraser")
             }
             Tool { text: "Type (T)"; highlighted: page.tool === "type"; onClicked: page.choose("type") }
+            Tool { text: "Select (S)"; highlighted: page.tool === "select"; onClicked: page.choose("select") }
+            Tool { text: "Text (R)"; highlighted: page.showText; onClicked: page.showText = !page.showText }
             Tool { text: "Picture… (I)"; onClicked: pageContent.pickPicture() }
             Tool { text: "Above ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "below"; onClicked: pageContent.arrange("above") }
             Tool { text: "Below ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "above"; onClicked: pageContent.arrange("below") }
@@ -243,7 +271,7 @@ FocusScope {
             }
             Tool { text: "Remove (Delete)"; visible: !!page.chosenItem; onClicked: pageContent.removeChosen() }
             Repeater {
-                model: page.tool === "type" ? [] : page.colours
+                model: page.resting ? [] : page.colours
                 delegate: Item {
                     id: swatch
                     required property var modelData
@@ -269,8 +297,8 @@ FocusScope {
                     TapHandler { onTapped: page.chooseColour(swatch.index) }
                 }
             }
-            Tool { text: "Thinner ["; visible: page.tool !== "type"; onClicked: page.thicker(-1) }
-            Tool { text: "Thicker ]"; visible: page.tool !== "type"; onClicked: page.thicker(1) }
+            Tool { text: "Thinner ["; visible: !page.resting; onClicked: page.thicker(-1) }
+            Tool { text: "Thicker ]"; visible: !page.resting; onClicked: page.thicker(1) }
             Tool { text: "Undo"; enabled: surface.canUndo; onClicked: surface.undo() }
             Tool { text: "Redo"; enabled: surface.canRedo; onClicked: surface.redo() }
             Tool { text: "Clear page"; enabled: surface.count > 0; onClicked: surface.clear() }
@@ -293,6 +321,17 @@ FocusScope {
             text: page.problem
             color: theme.colors.red || theme.accent
             wrapMode: Text.Wrap
+        }
+
+        RecognisedText {
+            id: recognisedText
+            Layout.fillWidth: true
+            visible: page.showText
+            plugin: page.plugin
+            pageId: page.pageId
+            selection: page.selection
+            onProblem: (why) => page.problem = why
+            onChanged: { page.selection = []; page.selected = null; page.reload() }
         }
 
         Flickable {
@@ -339,15 +378,39 @@ FocusScope {
                     penWidth: page.tools && page.pen ? page.widthOf(page.pen.id) : 0.5
                     eraserWidth: page.tools ? page.widthOf("eraser") : 24
                     batchPause: 600
-                    readOnly: !page.entry || page.tool === "type"
+                    readOnly: !page.entry || page.resting
                     Accessible.role: Accessible.Graphic
                     Accessible.name: page.entry ? (page.entry.title + ", " + surface.count + (surface.count === 1 ? " stroke" : " strokes")) : ""
                     onInked: (batch) => {
                         if (!page.entry) return
                         page.ask("ink", [page.entry.id, batch])
+                        recognisedText.inkChanged()
                     }
                 }
                 Layer { kind: "above" }
+
+                // The Select tool: a rectangle dragged over the page chooses the strokes in it.
+                Rectangle {
+                    visible: page.tool === "select" && !!page.selected
+                    x: page.selected ? page.selected.x * sheet.unit : 0
+                    y: page.selected ? page.selected.y * sheet.unit : 0
+                    width: page.selected ? page.selected.width * sheet.unit : 0
+                    height: page.selected ? page.selected.height * sheet.unit : 0
+                    color: "transparent"
+                    border.color: theme.accent
+                    border.width: 1
+                }
+                DragHandler {
+                    enabled: page.tool === "select"
+                    target: null
+                    onActiveChanged: if (!active) page.select(page.onPaper(centroid.pressPosition), page.onPaper(centroid.position))
+                    onCentroidChanged: if (active) page.selected = {
+                        x: Math.min(centroid.pressPosition.x, centroid.position.x) / sheet.unit,
+                        y: Math.min(centroid.pressPosition.y, centroid.position.y) / sheet.unit,
+                        width: Math.abs(centroid.position.x - centroid.pressPosition.x) / sheet.unit,
+                        height: Math.abs(centroid.position.y - centroid.pressPosition.y) / sheet.unit
+                    }
+                }
 
                 // A picture file dropped on the page goes where it was dropped.
                 DropArea {

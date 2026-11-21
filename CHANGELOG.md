@@ -25,3 +25,10 @@ Omabook it needs.
   and 1 MB, without what the file said of where it was taken. Each is kept in the change log, so they merge
   between computers: a block moved on one and typed in on the other keeps both, and pictures travel with
   their page. Thumbnails show them too.
+- Recognised text from handwriting (#6): a moment after the pen rests, a page's ink is read to text by a
+  vision model on your AI server (Omabook's recognition), in the background, and kept in the change log with
+  the strokes it came from; it is read again when they change. Text (R) shows it under the tools, where it is
+  corrected by hand (never written over unasked) and made a text block where the ink lies, beside the ink or
+  in its place. The Select tool (S) chooses strokes with a rectangle, to be read on their own. Handwriting goes
+  only to your own servers; a hosted one only for a notebook that chose it and when Omabook's settings allow
+  hosted servers, never for a loose note. With no server that may read it, the page says so plainly.
