@@ -68,8 +68,13 @@ The words a recording was found to hold, each with its moment in the recording.
 _Avoid_: Subtitles, captions
 
 **Recognised text**:
-The words found in a page's ink.
+The words found in a page's ink, kept with the strokes they were read from, and corrected by hand where
+the reading was wrong.
 _Avoid_: OCR output, handwriting text
+
+**Selection**:
+Strokes of a page chosen with the Select tool, to be read or made a text block on their own.
+_Avoid_: Lasso, marquee (in words a person reads)
 
 **Place reference**:
 A link from a page, or a part of it, to a place in a book (a chapter or a passage).

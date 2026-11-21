@@ -21,6 +21,7 @@ omabook.include("lib/store.js");     // Store: notebooks, pages and what is on t
 omabook.include("lib/ink.js");       // Ink: the strokes on a page, and the tools that write them
 omabook.include("lib/pictures.js");  // Pictures: a picture's bytes, checked and kept in pieces
 omabook.include("lib/content.js");   // Content: text blocks and pictures on a page, placed and layered
+omabook.include("lib/recognised.js"); // Recognised: the words found in a page's ink, kept with it
 omabook.include("lib/snapshot.js");  // Snapshot: the notebook file and its book format
 omabook.include("lib/shelf.js");     // Shelf: notebooks in the library, and the view's overview
 
@@ -92,6 +93,14 @@ function setNotebookPaper(id, paper) {
     return Store.notebook(id);
 }
 
+// How a notebook's handwriting is recognised: `hosted` (true lets a hosted
+// AI server read it, when Omabook's settings allow hosted ones too; else
+// only one's own servers do) and `language` (a hint, such as "nl").
+function setNotebookRecognition(id, details) {
+    details = details || {};
+    return Store.changeNotebook(id, {hosted: details.hosted, language: details.language});
+}
+
 function removeNotebook(id) { Shelf.remove(id); }
 
 function openNotebook(id) { show(id); }
@@ -130,6 +139,19 @@ function removePage(id) { Shelf.refresh(Store.removePage(id)); }
 function strokes(pageId) { return Ink.strokes(pageId); }
 function ink(pageId, batch) { return Ink.write(pageId, batch); }
 function inkTools() { return Ink.tools(); }
+
+// Where a page's strokes lie, {id: {x, y, width, height}} in millimetres:
+// for choosing some of them with a rectangle.
+function strokeBounds(pageId) { return Ink.bounds(pageId); }
+
+// A page's recognised text and where it stands (Recognised.state); its ink
+// read, a promise of that again, or of a selection's words with `strokes`
+// ({background, again, strokes}); the person's own words for it; and a text
+// block made of it where the ink lies ({text, strokes, replace}).
+function recognised(pageId) { return Recognised.state(pageId); }
+function recognise(pageId, options) { return Recognised.recognise(pageId, options); }
+function correctRecognised(pageId, text) { return Recognised.correct(pageId, text); }
+function recognisedToText(pageId, options) { return Recognised.toText(pageId, options); }
 
 // What is on a page but its ink: its text blocks and pictures, lowest first
 // (below the ink, then above it), and where typed lines fall on its paper.

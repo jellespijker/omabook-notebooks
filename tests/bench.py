@@ -40,6 +40,16 @@ class Bench:
         # The plugin as it would be installed: everything but tests and data.
         shutil.copytree(ROOT, self.plugin, ignore=shutil.ignore_patterns(".git", "data", "tests", ".scratch", "__pycache__"))
 
+    def configure(self, **fields):
+        """Changes the scratch config.json, as the settings would: `None` takes a field out."""
+        path = os.path.join(self.config, "omabook", "config.json")
+        with open(path) as file:
+            config = json.load(file)
+        config.update(fields)
+        config = {key: value for key, value in config.items() if value is not None}
+        with open(path, "w") as file:
+            json.dump(config, file)
+
     def omabook(self, *arguments, timeout=120, check=True):
         done = subprocess.run(
             [OMABOOK] + [str(argument) for argument in arguments] + ["--library", self.library],
