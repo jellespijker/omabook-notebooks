@@ -21,6 +21,14 @@ _Avoid_: Memo, scrap, quick note
 What a page is printed with before anything is written on it: lines, squares, dots, staves or nothing.
 _Avoid_: Template, background, ruling
 
+**Ruling**:
+How far apart a lined paper's lines are: narrow (6.35 mm), college (7.1 mm) or wide (8.7 mm).
+_Avoid_: Spacing, line height
+
+**Snapshot**:
+The notebook file: what the change log held of a notebook when it was written, readable as a book.
+_Avoid_: Save, export (for the notebook file)
+
 **Content**:
 What is on a page: ink, typed text, pictures and audio clips.
 _Avoid_: Elements, objects, items

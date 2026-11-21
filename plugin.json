@@ -1,0 +1,11 @@
+{
+    "name": "Notebooks",
+    "version": "0.1",
+    "author": "",
+    "description": "Notebooks of pages on paper (lined, squared, dotted, blank, music staves or Cornell), beside the books you read. Private unless you share them.",
+    "omabook": "0.1.10",
+    "script": "main.js",
+    "permissions": [
+        "files"
+    ]
+}
