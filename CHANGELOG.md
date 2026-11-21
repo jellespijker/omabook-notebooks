@@ -32,3 +32,13 @@ Omabook it needs.
   in its place. The Select tool (S) chooses strokes with a rectangle, to be read on their own. Handwriting goes
   only to your own servers; a hosted one only for a notebook that chose it and when Omabook's settings allow
   hosted servers, never for a loose note. With no server that may read it, the page says so plainly.
+- Recordings tied to the ink, with transcripts (#5): Record (V) on a page records what is said while you
+  write (Omabook asks once whether Notebooks may use the microphone, and its mark shows it records), and each
+  stroke written meanwhile keeps its moment in the recording. With the Listen tool (A) a tap on the ink plays
+  from when it was written; while a recording plays, the ink shows as it was then and what was just written
+  glows. Each recording is transcribed in the background, each word with its moment, through your
+  transcription server or whisper.cpp, and shown beside the page (W), where a tap on a sentence plays it;
+  the notebook's book holds the words, so search finds them. Speech goes only to your own servers; a hosted
+  one only for a notebook that chose it for speech (apart from handwriting) and when Omabook's settings
+  allow hosted servers. Recordings go to your other computers with the plugin's data at a sync. Needs the
+  `microphone` permission and an Omabook with `omabook.audio` (#79) and binary data files (#131).

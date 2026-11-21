@@ -32,6 +32,11 @@ and comes as 1.0 with Omabook 0.2.0.
   written over unless you ask) and made a text block where the ink lies, beside the ink or in its place. The
   Select tool (`S`) chooses strokes with a rectangle, to be read and made a text block on their own. With no
   AI server that may read handwriting, the page says so and the ink is kept as it is.
+- **Recordings.** `V` records what is said while you write, and each stroke keeps its moment in the
+  recording: with the Listen tool (`A`) a tap on the ink plays from when it was written, and while a recording
+  plays the ink shows as it was then. Each recording is transcribed in the background, word by word, by your
+  own transcription server or whisper.cpp, and shown beside the page (`W`); with none, it says so. Speech goes
+  to a hosted server only for a notebook that chose it, and only when Omabook's settings allow it.
 - **Loose notes.** A page of no notebook, filed into one later (or taken out again).
 - **Live in the change log.** Notebooks and pages are kept as operations in Omabook's change log, so they
   go to your other computers and merge there; the notebook file is a snapshot written from them.

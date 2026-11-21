@@ -60,7 +60,8 @@ Where a text block or a picture lies: over the strokes, or under them, to be wri
 _Avoid_: Layer, z-order (in words a person reads)
 
 **Recording**:
-Audio recorded while a page was being written, tied to the strokes drawn during it.
+Audio recorded while a page was being written, tied to the strokes drawn during it: each keeps its moment in
+the recording, so the ink plays what was said as it was written.
 _Avoid_: Audio note, voice memo, clip (for a whole recording)
 
 **Transcript**:

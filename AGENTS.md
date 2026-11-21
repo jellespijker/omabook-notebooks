@@ -17,7 +17,8 @@ workspace's `AGENTS.md` first.
   example of a plugin; the harness here is its harness.
 
 JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageContent.qml`, `ContentItem.qml`,
-`PictureImport.qml`, `RecognisedText.qml` and `PaperSheet.qml`), and Python
+`PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml` and
+`PaperSheet.qml`), and Python
 tests.
 
 ## The harness
@@ -40,11 +41,13 @@ Once per clone: `uvx pre-commit install`. Before handing work in: `bin/check`. N
 ## Testing
 
 ```bash
-python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures and recognised text; needs omabook on the PATH, or OMABOOK=/path/to/omabook
+python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures, recognised text and recordings; needs omabook on the PATH, or OMABOOK=/path/to/omabook
 ```
 
 Recognition is tested against a stand-in AI server on this computer (`tests/fakeserver.py`, as Omabook's
-`tests/fakeaiserver.h`), which the scratch config.json points at; nothing is sent anywhere else.
+`tests/fakeaiserver.h`), which the scratch config.json points at; nothing is sent anywhere else. So are
+transcripts; a recording comes in as an Opus file the tests write (`tests/opus.py`), since from a command line
+nobody can say yes to the microphone.
 
 It passes before a ticket lands, and needs no window. The QML is checked with
 `/usr/lib/qt6/bin/qmllint`: a new file has no warning but `backend`, `theme` and `Omabook`, which only
