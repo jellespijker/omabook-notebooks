@@ -11,6 +11,11 @@ import Omabook
 // it to the pages. A page's thumbnail shows its ink, text blocks and pictures.
 // Over the list, words are found in every notebook (NotebookFind, #7).
 //
+// Beside a book (#8: Alt+N while reading, or the page's ⋯), the reader is
+// on one side and this on the other: over the list, every page that refers
+// to the book (BookReferences), each opening its page and the book at its
+// passage; a page or a loose note made here refers to where the reader is.
+//
 // It holds no logic of its own: what it shows comes from the script
 // (`notebooks()`, `paper()`), and what is done is asked of it. A call that
 // changes something goes through `request`, so a reason it can't be done
@@ -55,6 +60,7 @@ FocusScope {
 
     function reload() {
         overview = backend.scripts.call(plugin, "notebooks", []) || {notebooks: [], loose: []}
+        if (beside) inBook.reload()
         if (chosen && !shown)
             chosen = null
         if (opened !== "" && openedAt < 0)
@@ -178,6 +184,18 @@ FocusScope {
                 Layout.preferredWidth: view.narrow ? -1 : 260
                 spacing: 4
 
+                // Beside a book: what refers to it; one chosen opens its page, and the book there.
+                BookReferences {
+                    id: inBook
+                    Layout.fillWidth: true
+                    visible: view.beside && reader.open && !finder.active
+                    plugin: view.plugin
+                    onGo: (one) => {
+                        view.chosen = one.notebook
+                        view.openPage(one.page)
+                        if (one.here && !one.lost) backend.scripts.request(view.plugin, "followReference", [one.id, {anyway: true}])
+                    }
+                }
                 // Words found in the notebooks; a hit opens its page, and plays what was said there.
                 NotebookFind {
                     id: finder

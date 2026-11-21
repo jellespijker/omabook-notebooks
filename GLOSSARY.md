@@ -83,8 +83,15 @@ Strokes of a page chosen with the Select tool, to be read or made a text block o
 _Avoid_: Marquee (in words a person reads)
 
 **Place reference**:
-A link from a page, or a part of it, to a place in a book (a chapter or a passage).
+A link from a page, or a part of it (strokes, a text block), to a passage of a book, kept by its words as
+well as its place, so it is found again when the book's file changes; shown on the page as a chip that
+opens the book there.
 _Avoid_: Citation, anchor, bookmark
+
+**Lost reference**:
+A place reference whose words are no longer in the book's file: kept with its words, sought again in the
+next file, never guessed at from its place alone.
+_Avoid_: Broken link, orphan
 
 **Notebook scope**:
 The part of the knowledge graph that holds what was found in one notebook, linked to things elsewhere: the

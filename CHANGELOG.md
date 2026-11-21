@@ -57,3 +57,12 @@ Omabook it needs.
   step of undo. What it does is kept as erasing is, so it merges between computers: a stroke moved on one and
   recoloured on the other is both, never lost; a moved stroke keeps its moment in a recording. Needs an
   Omabook with the ink surface's lasso (#129).
+- Writing beside reading, with place references (#8): Alt+N while reading opens the notebooks beside the book,
+  the reader on one side and a page on the other; over the list, every page that refers to the book. A page
+  or a loose note made there refers to where you are; on a page B refers to where the reader is (Shift+B to
+  the words you copied there), tied to what the lasso or the Select tool holds, or the text block chosen. A
+  reference is a chip on the page that opens the book at its passage (a click, a tap, or G); it is kept by its
+  words as well as its place, so a new edition of the book finds it again, and one whose words are gone is
+  kept as lost, never guessed at. In a notebook shared with others, a reference never shows what lies past
+  where you have read to. The notebook's book names the passages its pages refer to. Needs the `clipboard`
+  permission, for the copied words.

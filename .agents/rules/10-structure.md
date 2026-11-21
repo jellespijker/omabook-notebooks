@@ -21,7 +21,7 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Util` | helpers: know nothing of notebooks |
 | `Paper` | the kinds of paper and sizes, and what each draws, in millimetres |
 | `Typed` | a text block's words: plain text or Markdown, cleaned, never HTML |
-| `Store` | **the live data**: notebooks, pages, text blocks, pictures, recognised text, recordings, transcripts and mentions as things in `omabook.log` (ADR 0002) |
+| `Store` | **the live data**: notebooks, pages, text blocks, pictures, recognised text, recordings, transcripts, mentions and place references as things in `omabook.log` (ADR 0002) |
 | `Ink` | the strokes on a page (ink batches from Omabook's ink surface and its lasso, through `Store`), where each lies, and the tools |
 | `Pictures` | a picture's bytes: checked, capped, in pieces for the log, joined again |
 | `Content` | text blocks and pictures on a page: placed on the paper's lines, moved, resized, above or below the ink |
@@ -29,6 +29,7 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Recordings` | what was said while a page was written (Omabook's `audio`): recorded, kept with each stroke's moment in it, played from the ink |
 | `Transcripts` | the words a recording holds (Omabook's `recognize.audio`), each with its moment, kept with the recording |
 | `Finder` | a page's words (typed, recognised, said) and the pages that hold some words, with where |
+| `References` | place references: from a page to a passage of a book, by its words and its place, found again when the book's file changes |
 | `Snapshot` | the notebook file: written from the store, read back, and its book format |
 | `Shelf` | a notebook as an item in the library, and what the view is shown |
 | `Mentions` | what a page is about in the knowledge graph (`omabook.graph`): suggested, said by hand, tied to the notebook's book |

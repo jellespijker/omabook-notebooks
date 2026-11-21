@@ -5,8 +5,8 @@ import Omabook
 
 // The tools above a page (InkPage), wrapped where the view is narrow: the
 // pens, the eraser, Type, Select and the lasso (#3, with what it does to what
-// it holds), what is shown beside the page, what is chosen of the text
-// blocks and pictures (#4), the
+// it holds), what is shown beside the page, references to the book being
+// read (#8), what is chosen of the text blocks and pictures (#4), the
 // colours and widths, undo and redo, the fingers, zoom and the pages before
 // and after. Each says its key; the keys themselves are the page's.
 Flow {
@@ -48,6 +48,9 @@ Flow {
     Tool { text: "Listen (A)"; highlighted: tools.page.tool === "listen"; onClicked: tools.page.choose("listen") }
     Tool { text: "Said (W)"; highlighted: tools.page.showSaid; onClicked: tools.page.showSaid = !tools.page.showSaid }
     Tool { text: "About (K)"; highlighted: tools.page.showAbout; onClicked: tools.page.showAbout = !tools.page.showAbout }
+    Tool { text: "Refer to the book (B)"; visible: reader.open; onClicked: tools.page.refer(false) }
+    Tool { text: "Refer to copied words (Shift+B)"; visible: reader.open; onClicked: tools.page.refer(true) }
+    Tool { text: "Go to the book (G)"; visible: tools.page.referenceCount > 0; onClicked: tools.page.followReference(1) }
     Tool { text: "Above ink (L)"; visible: !!tools.page.chosenItem && tools.page.chosenItem.layer === "below"; onClicked: tools.page.items.arrange("above") }
     Tool { text: "Below ink (L)"; visible: !!tools.page.chosenItem && tools.page.chosenItem.layer === "above"; onClicked: tools.page.items.arrange("below") }
     Tool { text: "To the back ["; visible: !!tools.page.chosenItem; onClicked: tools.page.items.arrange("back") }

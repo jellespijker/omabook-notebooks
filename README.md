@@ -39,6 +39,11 @@ and comes as 1.0 with Omabook 0.2.0.
   to a hosted server only for a notebook that chose it, and only when Omabook's settings allow it.
 - **The lasso.** `L` goes around strokes to move, recolour (`1` to `4`), copy, cut, paste or take them away;
   it is kept as erasing is, so it merges between computers too.
+- **Beside the book.** `Alt+N` while reading opens the notebooks beside the page, with every page that refers
+  to the book. A page made there refers to where you are reading, and `B` on a page refers to it again
+  (`Shift+B` to the words you copied in the reader): a chip on the page that opens the book at that passage
+  (`G`), found again by its words when the book's file changes. In a shared notebook a reference never
+  shows what lies past where you have read to.
 - **Loose notes.** A page of no notebook, filed into one later (or taken out again).
 - **Live in the change log.** Notebooks and pages are kept as operations in Omabook's change log, so they
   go to your other computers and merge there; the notebook file is a snapshot written from them.

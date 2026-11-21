@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The plugin's tests in a scratch library: notebooks, pages, paper, ink, text blocks, pictures, recognised text,
-recordings, search and the knowledge graph.
+recordings, search, the knowledge graph and place references.
 
     python3 tests/run.py            # needs `omabook` on the PATH, or OMABOOK=/path/to/omabook
     python3 tests/run.py --keep     # leave the scratch folder behind, to look at
@@ -31,6 +31,7 @@ import knowledge
 import paper
 import recognition
 import recordings
+import references
 from bench import NAME, OMABOOK, ROOT, Bench
 
 SAMPLE = os.path.join(ROOT, "tests", "data", "sample.omanotebook")
@@ -201,6 +202,7 @@ def main():
         recognition.check(bench, step)
         recordings.check(bench, step)
         knowledge.check(bench, step)
+        references.check(bench, step)
         print(f"\nAll {len(passed)} steps passed.")
         if "--keep" in sys.argv:
             print("The scratch folder is kept: " + bench.scratch)

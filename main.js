@@ -25,6 +25,7 @@ omabook.include("lib/recognised.js"); // Recognised: the words found in a page's
 omabook.include("lib/recordings.js"); // Recordings: what was said while a page was written, tied to its ink
 omabook.include("lib/transcripts.js"); // Transcripts: the words a recording holds, each with its moment
 omabook.include("lib/finder.js");    // Finder: a page's words, typed, written and said, and the pages that hold some
+omabook.include("lib/references.js"); // References: place references, from a page to a passage of a book
 omabook.include("lib/snapshot.js");  // Snapshot: the notebook file and its book format
 omabook.include("lib/shelf.js");     // Shelf: notebooks in the library, and the view's overview
 omabook.include("lib/mentions.js");  // Mentions: what the pages are about, in the knowledge graph
@@ -48,11 +49,15 @@ omabook.ui.launcher({
 
 // 3. What the person does elsewhere.
 
-// Opening a notebook from the shelf opens it in the view.
+// Opening a notebook from the shelf opens it in the view. Opening another
+// book finds the passages the notebooks refer to in it again, if its file
+// changed since they were made.
 omabook.on("book.opened", function (event) {
     const notebook = event.identifiers && event.identifiers[Shelf.scheme];
     if (event.generated === omabook.plugin.id && notebook)
         show(notebook);
+    else if (event.id)
+        References.recheck(event.id);
 });
 
 // Removing a notebook's book from the shelf removes the notebook. When the
@@ -91,7 +96,17 @@ function renameNotebook(id, title) {
     return Shelf.refresh(id);
 }
 
-// Sharing is for a later ticket (#1); until then a notebook stays private.
+// Whether a notebook is the person's alone (as it starts) or shared with
+// others who read its books: a shared one's place references never show what
+// lies past one's own place in a book. Omabook doesn't tell a plugin yet when
+// the person lets one of its books into a shared collection (#127), so it
+// is said here; sharing the notebook itself is for a later ticket (#1).
+function setNotebookShared(id, shared) {
+    Store.changeNotebook(id, {private: shared !== true});
+    Shelf.refresh(id);
+    return Store.notebook(id);
+}
+
 function setNotebookPaper(id, paper) {
     Store.changeNotebook(id, {paper: paper});
     return Store.notebook(id);
@@ -114,13 +129,28 @@ function removeNotebook(id) {
 function openNotebook(id) { show(id); }
 
 // A new page, at `at` (from 0) or last; in no notebook it is a loose note.
-function addPage(notebook, paper, at) {
+// Written beside a book, it refers to where the reader is; `place` says
+// another ({book, section, fraction, quote}), or false for none.
+function addPage(notebook, paper, at, place) {
     const id = Store.addPage(notebook, {paper: paper, at: at});
+    referHere(id, place);
     Shelf.refresh(notebook);
     return id;
 }
 
-function makeLooseNote(paper) { return Store.addPage("", {paper: paper}); }
+function makeLooseNote(paper, place) {
+    const id = Store.addPage("", {paper: paper});
+    referHere(id, place);
+    return id;
+}
+
+function referHere(pageId, place) {
+    if (place === false)
+        return;
+    const reading = place ? null : omabook.reader.current();
+    if (place || (reading && reading.generated !== omabook.plugin.id))
+        References.make(pageId, place || {});
+}
 
 function page(id) { return Store.page(id); }
 
@@ -275,6 +305,35 @@ function findThings(words) { return Mentions.lookup(words); }
 function mention(pageId, what) { return Mentions.confirm(pageId, what); }
 function forgetMention(id) { return Mentions.forget(id); }
 function dismissMention(pageId, what) { return Mentions.dismiss(pageId, what); }
+
+// Place references (#8): from a page, or strokes or a text block of it, to
+// a passage of a book. Made at where the reader is, at a place given
+// ({book, section, fraction}) or on words chosen there (`quote`), tied to
+// `strokes` or a `block`, or put at {x, y}; or on the words copied in the
+// reader, the reader's selection. A page's, and every one to a book, with
+// its page. Followed: the book opens at the passage, found again by its
+// words if its file changed ({anyway} past where a shared notebook's reader
+// has read). Moved on the page, and removed.
+function refer(pageId, details) {
+    const id = References.make(pageId, details);
+    pageWritten(pageId);
+    return id;
+}
+function referCopied(pageId, details) {
+    const quote = omabook.ui.clipboard.readText();
+    if (!Util.text(quote))
+        throw new Error("Select some words in the reader and copy them (Ctrl+C) first; then refer to them here.");
+    return refer(pageId, Object.assign({}, details, {quote: quote}));
+}
+function references(pageId) { return References.ofPage(pageId); }
+function bookReferences(bookId) { return References.ofBook(bookId); }
+function followReference(id, options) { return References.follow(id, options); }
+function placeReference(id, at) { return References.place(id, at); }
+function removeReference(id) {
+    const pageId = Store.reference(id).page;
+    References.remove(id);
+    pageWritten(pageId);
+}
 
 // The notebook file as it would be written now, and one read back.
 function snapshot(id) { return Snapshot.build(id); }

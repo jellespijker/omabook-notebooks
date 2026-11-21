@@ -30,8 +30,11 @@ import Omabook
 // K shows what the page is about in the knowledge graph (PageAbout, #7).
 // The lasso (L) goes around strokes to move them (drag), recolour them (1
 // to 4), copy, cut, paste or take them away (the ink surface's keys: Ctrl+C,
-// Ctrl+X, Ctrl+V, Delete); each is an ink batch, as erasing is. The tools
-// above are PageTools.
+// Ctrl+X, Ctrl+V, Delete); each is an ink batch, as erasing is. Beside a
+// book (#8), B refers to where the reader is (Shift+B to the words copied
+// there), tied to what the lasso or the Select tool holds or the text block
+// chosen; the chips (PageReferences) open the book there, G the next one.
+// The tools above are PageTools.
 //
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
@@ -78,6 +81,7 @@ FocusScope {
     readonly property alias ink: surface
     readonly property alias items: pageContent
     readonly property int lassoed: surface.selection.count
+    readonly property int referenceCount: references.list.length
 
     readonly property bool resting: tool === "type" || tool === "select" || tool === "listen"
     readonly property var pen: tools ? tools.pens.find(function (one) {
@@ -133,6 +137,7 @@ FocusScope {
         surface.flush()
         surface.load(backend.scripts.call(plugin, "strokes", [entry.id]) || {})
         pageContent.reload()
+        references.reload()
     }
     function ask(fn, args) {
         const id = backend.scripts.request(plugin, fn, args)
@@ -155,7 +160,25 @@ FocusScope {
         selection = strokesIn(selected)
         if (selection.length) showText = true
     }
-
+    // What the lasso holds, by id: as the surface says (where it does), else the strokes within its box.
+    function lassoIds() {
+        const held = surface.selection
+        if (!held.count) return []
+        if (held.ids !== undefined) return held.ids
+        return strokesIn({x: held.box.x / sheet.unit, y: held.box.y / sheet.unit, width: held.box.width / sheet.unit, height: held.box.height / sheet.unit})
+    }
+    // A place reference to the book being read, at where the reader is or on
+    // the words copied there, tied to what is held of the page.
+    function refer(copied) {
+        if (!entry) return
+        problem = ""
+        const details = {}
+        const held = tool === "lasso" ? lassoIds() : tool === "select" ? selection : []
+        if (held.length) details.strokes = held
+        else if (chosenItem) details.block = chosenItem.id
+        references.make(copied ? "referCopied" : "refer", details)
+    }
+    function followReference(by) { problem = ""; references.follow(by) }
     // Done with the page: what waits goes, and the notebook's file follows.
     function leave() {
         if (!entry) return
@@ -210,6 +233,8 @@ FocusScope {
         plain[Qt.Key_W] = function () { page.showSaid = !page.showSaid }
         plain[Qt.Key_K] = function () { page.showAbout = !page.showAbout }
         plain[Qt.Key_L] = function () { page.choose("lasso") }
+        plain[Qt.Key_B] = function () { page.refer(shift) }
+        plain[Qt.Key_G] = function () { page.followReference(shift ? -1 : 1) }
         if (page.tool === "type")
             Object.assign(plain, pageContent.keys(event))
         const one = ctrl ? withCtrl[event.key] : plain[event.key]
@@ -359,6 +384,15 @@ FocusScope {
                     }
                 }
                 Layer { kind: "above" }
+                PageReferences {
+                    id: references
+                    anchors.fill: parent
+                    plugin: page.plugin
+                    pageId: page.pageId
+                    unit: sheet.unit
+                    arranging: page.tool === "type"
+                    onProblem: (why) => page.problem = why
+                }
                 InkMoments {
                     anchors.fill: parent
                     plugin: page.plugin
