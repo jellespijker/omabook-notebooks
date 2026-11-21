@@ -24,7 +24,9 @@ import Omabook
 // The page's handwriting is read to text a moment after the pen rests
 // (RecognisedText, #6), shown under the tools on request (R); with the
 // Select tool (S) a rectangle dragged over the page chooses strokes, to be
-// read on their own.
+// read on their own. What is said while writing is recorded with the ink
+// (PageRecordings, #5): V records and stops, A the Listen tool (a tap on
+// the ink plays from when it was written), W the transcripts beside it.
 //
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
@@ -56,6 +58,7 @@ FocusScope {
     property var widthAt: ({})
     property real zoom: 1
     property bool showText: false
+    property bool showSaid: false
     // The strokes the Select tool chose, and the rectangle it chose them with (millimetres).
     property var selection: []
     property var selected: null
@@ -65,7 +68,7 @@ FocusScope {
     // What is on the page but its ink: text blocks and pictures.
     readonly property var chosenItem: pageContent.chosenItem
 
-    readonly property bool resting: tool === "type" || tool === "select"
+    readonly property bool resting: tool === "type" || tool === "select" || tool === "listen"
     readonly property var pen: tools ? tools.pens.find(function (one) { return one.id === (page.tool === "eraser" || page.resting ? "pen" : page.tool) }) : null
     readonly property var colours: tools && pen ? tools.colours[pen.id] : []
     readonly property real fit: Math.max(0.5, (flick.width - 24) / sheet.layout.width)
@@ -181,6 +184,9 @@ FocusScope {
         plain[Qt.Key_S] = function () { page.choose("select") }
         plain[Qt.Key_R] = function () { page.showText = !page.showText }
         plain[Qt.Key_I] = pageContent.pickPicture
+        plain[Qt.Key_V] = pageRecordings.toggle
+        plain[Qt.Key_A] = function () { page.choose("listen") }
+        plain[Qt.Key_W] = function () { page.showSaid = !page.showSaid }
         if (page.tool === "type")
             Object.assign(plain, pageContent.keys(event))
         const one = ctrl ? withCtrl[event.key] : plain[event.key]
@@ -260,6 +266,8 @@ FocusScope {
             Tool { text: "Select (S)"; highlighted: page.tool === "select"; onClicked: page.choose("select") }
             Tool { text: "Text (R)"; highlighted: page.showText; onClicked: page.showText = !page.showText }
             Tool { text: "Picture… (I)"; onClicked: pageContent.pickPicture() }
+            Tool { text: "Listen (A)"; highlighted: page.tool === "listen"; onClicked: page.choose("listen") }
+            Tool { text: "Said (W)"; highlighted: page.showSaid; onClicked: page.showSaid = !page.showSaid }
             Tool { text: "Above ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "below"; onClicked: pageContent.arrange("above") }
             Tool { text: "Below ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "above"; onClicked: pageContent.arrange("below") }
             Tool { text: "To the back ["; visible: !!page.chosenItem; onClicked: pageContent.arrange("back") }
@@ -334,10 +342,22 @@ FocusScope {
             onChanged: { page.selection = []; page.selected = null; page.reload() }
         }
 
+        PageRecordings {
+            id: pageRecordings
+            Layout.fillWidth: true
+            plugin: page.plugin
+            pageId: page.pageId
+            onProblem: (why) => page.problem = why
+            onShowInk: (strokes) => surface.load(strokes)
+            onReplayed: page.reload()
+            onTranscribed: transcriptPane.reload()
+        }
+
         Flickable {
             id: flick
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.rightMargin: transcriptPane.visible && !page.narrow ? transcriptPane.width + 6 : 0
             clip: true
             contentWidth: Math.max(width, sheet.width + 24)
             contentHeight: sheet.height + 24
@@ -378,7 +398,7 @@ FocusScope {
                     penWidth: page.tools && page.pen ? page.widthOf(page.pen.id) : 0.5
                     eraserWidth: page.tools ? page.widthOf("eraser") : 24
                     batchPause: 600
-                    readOnly: !page.entry || page.resting
+                    readOnly: !page.entry || page.resting || pageRecordings.replaying
                     Accessible.role: Accessible.Graphic
                     Accessible.name: page.entry ? (page.entry.title + ", " + surface.count + (surface.count === 1 ? " stroke" : " strokes")) : ""
                     onInked: (batch) => {
@@ -388,6 +408,15 @@ FocusScope {
                     }
                 }
                 Layer { kind: "above" }
+                InkMoments {
+                    anchors.fill: parent
+                    plugin: page.plugin
+                    pageId: page.pageId
+                    unit: sheet.unit
+                    listening: page.tool === "listen"
+                    glowing: pageRecordings.glowing
+                    onTapped: (at) => pageRecordings.playFrom(at)
+                }
 
                 // The Select tool: a rectangle dragged over the page chooses the strokes in it.
                 Rectangle {
@@ -435,5 +464,20 @@ FocusScope {
                 onActiveScaleChanged: page.zoom = Math.max(0.5, Math.min(3, from * activeScale))
             }
         }
+    }
+
+    // Beside the page where there is room, over it where there isn't.
+    readonly property bool narrow: width < 720
+    TranscriptPane {
+        id: transcriptPane
+        visible: page.showSaid
+        plugin: page.plugin
+        pageId: page.pageId
+        playing: pageRecordings.playing
+        anchors.right: parent.right
+        y: flick.y
+        width: page.narrow ? page.width : 300
+        height: flick.height
+        onPlay: (id, at) => pageRecordings.ask("play", [id, at])
     }
 }
