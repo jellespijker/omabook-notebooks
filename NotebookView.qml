@@ -9,6 +9,7 @@ import Omabook
 // two at a time, and Backspace goes from the pages back to the list. A page
 // chosen is opened to write on (InkPage, #3), and Backspace goes back from
 // it to the pages. A page's thumbnail shows its ink, text blocks and pictures.
+// Over the list, words are found in every notebook (NotebookFind, #7).
 //
 // It holds no logic of its own: what it shows comes from the script
 // (`notebooks()`, `paper()`), and what is done is asked of it. A call that
@@ -177,12 +178,26 @@ FocusScope {
                 Layout.preferredWidth: view.narrow ? -1 : 260
                 spacing: 4
 
+                // Words found in the notebooks; a hit opens its page, and plays what was said there.
+                NotebookFind {
+                    id: finder
+                    Layout.fillWidth: true
+                    Layout.fillHeight: active
+                    plugin: view.plugin
+                    onGo: (hit) => {
+                        view.chosen = hit.loose ? "" : hit.notebook
+                        view.openPage(hit.page)
+                        if (hit.recording) backend.scripts.request(view.plugin, "play", [hit.recording, hit.at])
+                    }
+                }
                 RowLayout {
+                    visible: !finder.active
                     TextField { id: newTitle; Layout.fillWidth: true; placeholderText: "New notebook"
                                 onAccepted: { view.ask("makeNotebook", [text, view.paperChosen()]); text = "" } }
                     Action { text: "Make"; onClicked: newTitle.accepted() }
                 }
                 ListView {
+                    visible: !finder.active
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
@@ -195,7 +210,7 @@ FocusScope {
                         onClicked: view.chosen = modelData.id
                     }
                 }
-                Action { text: "New loose note"; onClicked: { view.ask("makeLooseNote", [view.paperChosen()]); view.chosen = "" } }
+                Action { visible: !finder.active; text: "New loose note"; onClicked: { view.ask("makeLooseNote", [view.paperChosen()]); view.chosen = "" } }
             }
 
             // The pages of the one chosen.
@@ -249,6 +264,7 @@ FocusScope {
                     plugin: view.plugin
                     entry: view.openedAt >= 0 ? view.shown.pages[view.openedAt] : null
                     hasBefore: view.openedAt > 0
+                    loose: !!view.shown && !!view.shown.loose
                     hasAfter: view.openedAt >= 0 && view.openedAt < view.shown.pages.length - 1
                     onTurn: (by) => view.openPage(view.shown.pages[view.openedAt + by].id)
                 }

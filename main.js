@@ -24,8 +24,10 @@ omabook.include("lib/content.js");   // Content: text blocks and pictures on a p
 omabook.include("lib/recognised.js"); // Recognised: the words found in a page's ink, kept with it
 omabook.include("lib/recordings.js"); // Recordings: what was said while a page was written, tied to its ink
 omabook.include("lib/transcripts.js"); // Transcripts: the words a recording holds, each with its moment
+omabook.include("lib/finder.js");    // Finder: a page's words, typed, written and said, and the pages that hold some
 omabook.include("lib/snapshot.js");  // Snapshot: the notebook file and its book format
 omabook.include("lib/shelf.js");     // Shelf: notebooks in the library, and the view's overview
+omabook.include("lib/mentions.js");  // Mentions: what the pages are about, in the knowledge graph
 
 // 2. What the plugin adds to Omabook.
 
@@ -104,7 +106,10 @@ function setNotebookRecognition(id, details) {
     return Store.changeNotebook(id, {hosted: details.hosted, speechHosted: details.speechHosted, language: details.language});
 }
 
-function removeNotebook(id) { Shelf.remove(id); }
+function removeNotebook(id) {
+    Mentions.untie(id);
+    Shelf.remove(id);
+}
 
 function openNotebook(id) { show(id); }
 
@@ -119,15 +124,19 @@ function makeLooseNote(paper) { return Store.addPage("", {paper: paper}); }
 
 function page(id) { return Store.page(id); }
 
+// A page's number is in what the graph is told of what it is about (Mentions).
 function movePage(id, at) {
     Store.movePage(id, at);
-    Shelf.refresh(Store.page(id).notebook);
+    const notebook = Store.page(id).notebook;
+    Shelf.refresh(notebook);
+    Mentions.follow([notebook]);
 }
 
 function filePage(id, notebook, at) {
     const was = Store.filePage(id, notebook, at);
     Shelf.refresh(was);
     Shelf.refresh(notebook);
+    Mentions.follow([was, notebook], Mentions.ofPage(id).length > 0);
 }
 
 function setPaper(id, paper) {
@@ -135,7 +144,12 @@ function setPaper(id, paper) {
     Shelf.refresh(Store.page(id).notebook);
 }
 
-function removePage(id) { Shelf.refresh(Store.removePage(id)); }
+function removePage(id) {
+    const said = Mentions.ofPage(id).length > 0;
+    const notebook = Store.removePage(id);
+    Shelf.refresh(notebook);
+    Mentions.follow([notebook], said);
+}
 
 // A page's ink: its strokes ({id: base64}), what the ink surface did since
 // the pen paused (an ink batch, {add, remove}), and the tools.
@@ -155,9 +169,21 @@ function strokeBounds(pageId) { return Ink.bounds(pageId); }
 // read, a promise of that again, or of a selection's words with `strokes`
 // ({background, again, strokes}); the person's own words for it; and a text
 // block made of it where the ink lies ({text, strokes, replace}).
+// The notebook's file follows what was read, so search and the book's text have it.
 function recognised(pageId) { return Recognised.state(pageId); }
-function recognise(pageId, options) { return Recognised.recognise(pageId, options); }
-function correctRecognised(pageId, text) { return Recognised.correct(pageId, text); }
+function recognise(pageId, options) {
+    const before = Recognised.state(pageId).at;
+    return Recognised.recognise(pageId, options).then(function (told) {
+        if (told && told.at !== undefined && told.at !== before)
+            pageWritten(pageId);
+        return told;
+    });
+}
+function correctRecognised(pageId, text) {
+    const told = Recognised.correct(pageId, text);
+    pageWritten(pageId);
+    return told;
+}
 function recognisedToText(pageId, options) { return Recognised.toText(pageId, options); }
 
 // Recording on a page while it is written (only in the window, once the
@@ -229,6 +255,23 @@ function pictureLimits() { return {bytes: Pictures.largest, side: Pictures.large
 // Written on a page and done with it: its notebook's file follows the ink,
 // once, rather than at every pause of the pen.
 function pageWritten(pageId) { Shelf.refresh(Store.page(pageId).notebook); }
+
+// The pages whose words, typed, read from the ink or said, hold every word
+// of `words`, and where: [{notebook, title, loose, page, number, kind
+// ("typed", "recognised", "transcript"), text, block, recording, at (ms)}].
+function find(words) { return Finder.find(words); }
+
+// What a page is about in the knowledge graph (Mentions): what the person
+// said, [{id, kind, name, scope, made}]; the things its words name, to say
+// yes or no to ([{node, kind, name, summary, scope}]); the things some
+// words find, to say by hand; said ({node} or {kind, name, summary}, made
+// when the graph has none), taken back, and said not to be.
+function mentions(pageId) { return Mentions.ofPage(pageId); }
+function suggestMentions(pageId) { return Mentions.suggest(pageId); }
+function findThings(words) { return Mentions.lookup(words); }
+function mention(pageId, what) { return Mentions.confirm(pageId, what); }
+function forgetMention(id) { return Mentions.forget(id); }
+function dismissMention(pageId, what) { return Mentions.dismiss(pageId, what); }
 
 // The notebook file as it would be written now, and one read back.
 function snapshot(id) { return Snapshot.build(id); }

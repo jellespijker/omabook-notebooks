@@ -27,6 +27,7 @@ import Omabook
 // read on their own. What is said while writing is recorded with the ink
 // (PageRecordings, #5): V records and stops, A the Listen tool (a tap on
 // the ink plays from when it was written), W the transcripts beside it.
+// K shows what the page is about in the knowledge graph (PageAbout, #7).
 //
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
@@ -49,6 +50,7 @@ FocusScope {
     readonly property string pageId: entry ? entry.id : ""
     property bool hasBefore: false
     property bool hasAfter: false
+    property bool loose: false
     signal turn(int by)
 
     readonly property var tools: plugin === "" ? null : backend.scripts.call(plugin, "inkTools", [])
@@ -59,6 +61,7 @@ FocusScope {
     property real zoom: 1
     property bool showText: false
     property bool showSaid: false
+    property bool showAbout: false
     // The strokes the Select tool chose, and the rectangle it chose them with (millimetres).
     property var selection: []
     property var selected: null
@@ -187,6 +190,7 @@ FocusScope {
         plain[Qt.Key_V] = pageRecordings.toggle
         plain[Qt.Key_A] = function () { page.choose("listen") }
         plain[Qt.Key_W] = function () { page.showSaid = !page.showSaid }
+        plain[Qt.Key_K] = function () { page.showAbout = !page.showAbout }
         if (page.tool === "type")
             Object.assign(plain, pageContent.keys(event))
         const one = ctrl ? withCtrl[event.key] : plain[event.key]
@@ -268,6 +272,7 @@ FocusScope {
             Tool { text: "Picture… (I)"; onClicked: pageContent.pickPicture() }
             Tool { text: "Listen (A)"; highlighted: page.tool === "listen"; onClicked: page.choose("listen") }
             Tool { text: "Said (W)"; highlighted: page.showSaid; onClicked: page.showSaid = !page.showSaid }
+            Tool { text: "About (K)"; highlighted: page.showAbout; onClicked: page.showAbout = !page.showAbout }
             Tool { text: "Above ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "below"; onClicked: pageContent.arrange("above") }
             Tool { text: "Below ink (L)"; visible: !!page.chosenItem && page.chosenItem.layer === "above"; onClicked: pageContent.arrange("below") }
             Tool { text: "To the back ["; visible: !!page.chosenItem; onClicked: pageContent.arrange("back") }
@@ -340,6 +345,15 @@ FocusScope {
             selection: page.selection
             onProblem: (why) => page.problem = why
             onChanged: { page.selection = []; page.selected = null; page.reload() }
+        }
+
+        PageAbout {
+            Layout.fillWidth: true
+            visible: page.showAbout
+            plugin: page.plugin
+            pageId: page.pageId
+            loose: page.loose
+            onProblem: (why) => page.problem = why
         }
 
         PageRecordings {

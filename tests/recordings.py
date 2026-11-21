@@ -114,6 +114,10 @@ def transcribing(bench, step, server, page, recording, book):
     assert "Kelsier pushes steel." in text, text
     step("what was said is read with its page in the notebook's book, where search can find it")
 
+    hits = [one for one in bench.ok("find", "then land") if one["kind"] == "transcript"]
+    assert [(one["page"], one["recording"], one["at"]) for one in hits] == [(page, recording, 9_800)], hits
+    step("find has what was said too, at the moment in the recording the words were said")
+
 
 def private(bench, step, server, notebook, recording):
     serve(bench, HOSTED, hosted=True)
