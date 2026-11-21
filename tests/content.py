@@ -10,6 +10,7 @@ import base64
 import os
 import shutil
 import struct
+import time
 import zlib
 
 from bench import Bench
@@ -168,6 +169,16 @@ def removing(bench, step, made, page, picture):
     step("a text block is removed, and a page goes with its text blocks and pictures")
 
 
+def next_second():
+    """Waits for the wall clock's next second.
+
+    The change log's clock (Omabook's HLC, ADR 0001) counts in whole seconds: two computers'
+    writes of one field within the same second, with no sync between, carry the same moment,
+    and both computers keep the same one of them (by device), not the one written later. Only
+    writes a second apart are "later" for it, so that is what the step checks."""
+    time.sleep(1.05 - time.time() % 1)
+
+
 def merging(bench, step):
     other = Bench()
     try:
@@ -190,6 +201,7 @@ def merging(bench, step):
         step("a block moved on one computer and typed in on the other keeps both; a picture travels whole")
 
         bench.ok("changeText", block, {"text": "laptop's words"})
+        next_second()
         other.ok("changeText", block, {"text": "desktop's words"})
         bench.omabook("sync", there)
         assert item(bench, page, block)["text"] == item(other, page, block)["text"] == "desktop's words"
