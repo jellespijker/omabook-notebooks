@@ -22,8 +22,10 @@ somewhere it shouldn't. Enforced by `rules/js/*.yml` on the lines a change adds.
 - **Live data is operations in the change log** (`omabook.log`, Omabook's
   ADR 0002), through `Store`. A field written on two computers keeps the later
   one, a set keeps what both added: so a page's order is a number of its own,
-  never a list in its notebook, and what a page holds (strokes, text blocks,
-  pictures, recordings) are sets of the page. The notebook file is a snapshot
+  never a list in its notebook, and what a page holds is a set of the page
+  (strokes, recordings) or a thing of its own that names its page (text
+  blocks, pictures: moved on one computer and typed in on another, both
+  hold). The notebook file is a snapshot
   written from the log, never read back into it.
 - **Private by default.** A notebook is private until the person shares it;
   handwriting and recordings go only to the person's own servers unless a

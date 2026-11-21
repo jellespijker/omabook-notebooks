@@ -47,8 +47,17 @@ or the eraser (of what it covers, or of whole strokes).
 _Avoid_: Brush, mode
 
 **Text block**:
-Typed text placed on a page, set on the paper's lines.
+Typed text placed on a page, set on the paper's lines: plain text or Markdown, never HTML.
 _Avoid_: Text box, paragraph, typed note
+
+**Picture**:
+An image put on a page from a file, kept with the page so it goes where the page goes; ink may be
+written over it.
+_Avoid_: Image, attachment, photo (for a picture on a page)
+
+**Above the ink, below the ink**:
+Where a text block or a picture lies: over the strokes, or under them, to be written over.
+_Avoid_: Layer, z-order (in words a person reads)
 
 **Recording**:
 Audio recorded while a page was being written, tied to the strokes drawn during it.

@@ -16,8 +16,11 @@
 //    ones above it.
 omabook.include("lib/util.js");      // Util: small helpers
 omabook.include("lib/paper.js");     // Paper: kinds and sizes of paper, and what each draws
-omabook.include("lib/store.js");     // Store: notebooks and pages in the change log
+omabook.include("lib/typed.js");     // Typed: a text block's words, plain or Markdown, never HTML
+omabook.include("lib/store.js");     // Store: notebooks, pages and what is on them in the change log
 omabook.include("lib/ink.js");       // Ink: the strokes on a page, and the tools that write them
+omabook.include("lib/pictures.js");  // Pictures: a picture's bytes, checked and kept in pieces
+omabook.include("lib/content.js");   // Content: text blocks and pictures on a page, placed and layered
 omabook.include("lib/snapshot.js");  // Snapshot: the notebook file and its book format
 omabook.include("lib/shelf.js");     // Shelf: notebooks in the library, and the view's overview
 
@@ -127,6 +130,28 @@ function removePage(id) { Shelf.refresh(Store.removePage(id)); }
 function strokes(pageId) { return Ink.strokes(pageId); }
 function ink(pageId, batch) { return Ink.write(pageId, batch); }
 function inkTools() { return Ink.tools(); }
+
+// What is on a page but its ink: its text blocks and pictures, lowest first
+// (below the ink, then above it), and where typed lines fall on its paper.
+function content(pageId) { return Content.list(pageId); }
+
+// A text block: {x, y, width, height, text, format ("markdown" or "plain"),
+// layer}, every part of it optional; its words changed; moved or resized
+// ({x, y, width, height}, in millimetres); above or below the ink, or to the
+// front or the back ("above", "below", "front", "back"); removed. The same
+// place, arrange and remove are a picture's.
+function addText(pageId, details) { return Content.addText(pageId, details); }
+function changeText(id, details) { return Content.changeText(id, details); }
+function place(id, rectangle) { return Content.place(id, rectangle); }
+function arrange(id, how) { return Content.arrange(id, how); }
+function removeContent(id) { return Content.remove(id); }
+
+// A picture from a file, as the view read it: {data (a data address of PNG
+// or JPEG), pixels: {width, height}, title, x, y, width}. Its bytes as a data
+// address again, "" while they are still on their way from another computer.
+function addPicture(pageId, details) { return Content.addPicture(pageId, details); }
+function picture(id) { return Content.picture(id); }
+function pictureLimits() { return {bytes: Pictures.largest, side: Pictures.largestSide}; }
 
 // Written on a page and done with it: its notebook's file follows the ink,
 // once, rather than at every pause of the pen.

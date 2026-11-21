@@ -53,13 +53,18 @@ class Bench:
         return done
 
     def run(self, what, *arguments, timeout=120):
-        """Runs a function or an event of the plugin; answers {result, said, log, error?}."""
+        """Runs a function or an event of the plugin; answers {result, said, log, error?}.
+
+        One word of a command line holds at most 128 KiB, and Omabook joins the words after
+        the function's name with a space: long JSON (a picture) goes as the words between its
+        spaces, and a long string in it as a list of pieces (see pieces())."""
+        given = json.dumps(list(arguments)) if ":" not in what else json.dumps(arguments[0])
         done = self.omabook(
             "plugin",
             "run",
             NAME,
             what,
-            json.dumps(list(arguments)) if ":" not in what else json.dumps(arguments[0]),
+            *(given.split(" ") if len(given) > 100_000 else [given]),
             "--folder",
             self.plugins,
             "--json",
@@ -70,6 +75,11 @@ class Bench:
             return json.loads(done.stdout)
         except ValueError:
             raise AssertionError(f"plugin run {what} printed no JSON:\n{done.stdout}\n{done.stderr}") from None
+
+    @staticmethod
+    def pieces(text, size=100_000):
+        """A long string as the list of pieces a plugin's function joins again."""
+        return [text[at : at + size] for at in range(0, len(text), size)]
 
     def ok(self, what, *arguments, **options):
         answer = self.run(what, *arguments, **options)
