@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""The plugin's tests: notebooks, pages and paper in a scratch library, with no window.
+"""The plugin's tests: notebooks, pages, paper and ink in a scratch library, with no window.
 
     python3 tests/run.py            # needs `omabook` on the PATH, or OMABOOK=/path/to/omabook
     python3 tests/run.py --keep     # leave the scratch folder behind, to look at
 
-Everything happens in a scratch folder: HOME and the XDG folders point into
+Everything happens in a scratch folder: HOME and the XDG folders (state too) point into
 it, so no real settings, plugins or library are read or written. The plugin
 is copied into the scratch config's plugin folder, where an installed plugin
 lives, so that `omabook toc` and `omabook text` read its notebooks too.
@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import sys
 
+import ink
 import paper
 from bench import NAME, OMABOOK, ROOT, Bench
 
@@ -190,6 +191,7 @@ def main():
         other = loose(bench, step, physics)
         removing(bench, step, physics, other)
         snapshots(bench, step)
+        ink.check(bench, step)
         print(f"\nAll {len(passed)} steps passed.")
         if "--keep" in sys.argv:
             print("The scratch folder is kept: " + bench.scratch)

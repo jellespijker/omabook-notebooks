@@ -21,6 +21,7 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Util` | helpers: know nothing of notebooks |
 | `Paper` | the kinds of paper and sizes, and what each draws, in millimetres |
 | `Store` | **the live data**: notebooks and pages as things in `omabook.log` (ADR 0002) |
+| `Ink` | the strokes on a page (ink batches from Omabook's ink surface, through `Store`), and the tools |
 | `Snapshot` | the notebook file: written from the store, read back, and its book format |
 | `Shelf` | a notebook as an item in the library, and what the view is shown |
 | `main.js` | the front door: registers the format, the view, commands and events |

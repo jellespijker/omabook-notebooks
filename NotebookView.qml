@@ -1,11 +1,14 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Omabook
 
 // The view of notebooks (omabook.ui.view, "notebooks"): the notebooks and the
 // loose notes on the left, the pages of the one chosen on the right, each on
 // its paper. Narrow (beside the page, or a small window) it shows one of the
-// two at a time, and Backspace goes from the pages back to the list.
+// two at a time, and Backspace goes from the pages back to the list. A page
+// chosen is opened to write on (InkPage, #3), and Backspace goes back from
+// it to the pages.
 //
 // It holds no logic of its own: what it shows comes from the script
 // (`notebooks()`, `paper()`), and what is done is asked of it. A call that
@@ -36,6 +39,8 @@ FocusScope {
     property var choices: ({kinds: [], rulings: [], sizes: []})
     // The notebook shown: its id, "" for the loose notes, null for none.
     property var chosen: null
+    // The page open to write on, by its id; "" for none.
+    property string opened: ""
     property string problem: ""
     property int asked: -1
 
@@ -45,10 +50,22 @@ FocusScope {
         return overview.notebooks.find(function (one) { return one.id === chosen }) || null
     }
 
+    readonly property int openedAt: shown ? shown.pages.findIndex(function (one) { return one.id === opened }) : -1
+
     function reload() {
         overview = backend.scripts.call(plugin, "notebooks", []) || {notebooks: [], loose: []}
         if (chosen && !shown)
             chosen = null
+        if (opened !== "" && openedAt < 0)
+            opened = ""
+    }
+    // Opens a page to write on, "" for none; the one open before is left first.
+    function openPage(id) {
+        if (opened === id) return
+        if (opened !== "") inkPage.leave()
+        opened = id
+        if (id !== "") inkPage.takeFocus()
+        else view.forceActiveFocus()
     }
     function ask(fn, args) {
         problem = ""
@@ -59,13 +76,29 @@ FocusScope {
         return {kind: kind, ruling: choices.rulings[rulingBox.currentIndex], size: choices.sizes[sizeBox.currentIndex]}
     }
     function back() {
+        if (opened !== "") {
+            openPage("")
+            reload()
+            return true
+        }
         if (narrow && chosen !== null) {
             chosen = null
             return true
         }
         return false
     }
-    function takeFocus() { forceActiveFocus() }
+    function takeFocus() {
+        if (opened !== "") {
+            // Written on elsewhere meanwhile, perhaps (a sync).
+            inkPage.reload()
+            inkPage.takeFocus()
+        } else {
+            forceActiveFocus()
+        }
+    }
+    onChosenChanged: openPage("")
+    Component.onDestruction: if (opened !== "") inkPage.leave()
+    onVisibleChanged: if (!visible && opened !== "") inkPage.leave()
 
     Component.onCompleted: {
         choices = backend.scripts.call(plugin, "papers", []) || choices
@@ -91,48 +124,16 @@ FocusScope {
         if (event.key === Qt.Key_N && !(event.modifiers & Qt.ControlModifier) && view.shown && !view.shown.loose) {
             view.ask("addPage", [view.shown.id, view.paperChosen()])
             event.accepted = true
+        } else if (event.key === Qt.Key_Return && view.opened === "" && view.shown && view.shown.pages.length > 0) {
+            // The keyboard's way to a page: the first, then Page Down.
+            view.openPage(view.shown.pages[0].id)
+            event.accepted = true
         }
     }
 
     component Action: Button {
         flat: true
         font.pixelSize: 13
-    }
-
-    // A page's paper, drawn from what the script says it holds in
-    // millimetres, scaled to the width it is given.
-    component Sheet: Canvas {
-        id: sheet
-        property var paper: ({})
-        readonly property var layout: backend.scripts.call(view.plugin, "paper", [paper]) || ({width: 1, height: 1.414, lines: []})
-        implicitHeight: width * layout.height / layout.width
-        onLayoutChanged: requestPaint()
-        onWidthChanged: requestPaint()
-        onPaint: {
-            const g = getContext("2d")
-            const scale = width / layout.width
-            g.reset()
-            g.fillStyle = theme.light ? "#fdfcf8" : Qt.lighter(theme.background, 1.25)
-            g.fillRect(0, 0, width, height)
-            const colours = {rule: theme.colors.muted, grid: theme.colors.selection, staff: theme.foreground,
-                             margin: theme.accent, cue: theme.accent}
-            for (const l of layout.lines) {
-                g.strokeStyle = colours[l.role] || theme.colors.muted
-                g.lineWidth = Math.max(0.5, (l.role === "staff" ? 0.15 : 0.1) * scale)
-                g.beginPath()
-                g.moveTo(l.x1 * scale, l.y1 * scale)
-                g.lineTo(l.x2 * scale, l.y2 * scale)
-                g.stroke()
-            }
-            const d = layout.dots
-            if (d) {
-                g.fillStyle = theme.colors.muted
-                const r = Math.max(0.6, 0.25 * scale)
-                for (let i = 0; i < d.columns; i++)
-                    for (let j = 0; j < d.rows; j++)
-                        g.fillRect((d.x + i * d.pitch) * scale - r / 2, (d.y + j * d.pitch) * scale - r / 2, r, r)
-            }
-        }
     }
 
     ColumnLayout {
@@ -206,6 +207,7 @@ FocusScope {
 
                 RowLayout {
                     Layout.fillWidth: true
+                    visible: view.opened === ""
                     TextField {
                         Layout.fillWidth: true
                         readOnly: !view.shown || view.shown.loose
@@ -221,13 +223,39 @@ FocusScope {
                              onClicked: view.ask("removeNotebook", [view.shown.id]) }
                 }
                 Label {
-                    visible: !!view.shown && !view.shown.loose
+                    visible: !!view.shown && !view.shown.loose && view.opened === ""
                     text: "Private: only on your own computers."
                     color: theme.colors.muted
                 }
 
+                // The page open, written on.
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: view.opened !== ""
+                    Action { text: "← Pages"; onClicked: view.back() }
+                    Label {
+                        Layout.fillWidth: true
+                        text: view.openedAt >= 0 ? (view.shown.loose ? "Note " : "Page ") + (view.openedAt + 1) + " of "
+                                                   + view.shown.pages.length + "  ·  " + view.shown.title : ""
+                        elide: Text.ElideRight
+                        color: theme.colors.muted
+                    }
+                }
+                InkPage {
+                    id: inkPage
+                    visible: view.opened !== ""
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    plugin: view.plugin
+                    entry: view.openedAt >= 0 ? view.shown.pages[view.openedAt] : null
+                    hasBefore: view.openedAt > 0
+                    hasAfter: view.openedAt >= 0 && view.openedAt < view.shown.pages.length - 1
+                    onTurn: (by) => view.openPage(view.shown.pages[view.openedAt + by].id)
+                }
+
                 GridView {
                     id: grid
+                    visible: view.opened === ""
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
@@ -239,7 +267,33 @@ FocusScope {
                         required property int index
                         width: grid.cellWidth - 12
                         spacing: 2
-                        Sheet { width: parent.width; height: implicitHeight; paper: modelData.paper }
+                        // The page with its ink, small; a click or a tap opens it to write on.
+                        PaperSheet {
+                            id: thumb
+                            width: parent.width
+                            height: implicitHeight
+                            plugin: view.plugin
+                            paper: modelData.paper
+                            InkSurface {
+                                anchors.fill: parent
+                                readOnly: true
+                                inkScale: thumb.unit
+                                // Read again whenever the overview is, as on coming back from the page.
+                                readonly property var kept: {
+                                    view.overview
+                                    return backend.scripts.call(view.plugin, "strokes", [modelData.id]) || {}
+                                }
+                                onKeptChanged: load(kept)
+                                Component.onCompleted: load(kept)
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: view.openPage(modelData.id)
+                            }
+                            Accessible.role: Accessible.Button
+                            Accessible.name: "Open " + (view.shown.loose ? "note " : "page ") + modelData.number + " to write on"
+                        }
                         Label { text: (view.shown.loose ? "Note " : "Page ") + modelData.number + "  ·  " + modelData.title
                                 color: theme.colors.muted; font.pixelSize: 11; width: parent.width; elide: Text.ElideRight }
                         Flow {

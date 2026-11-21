@@ -17,6 +17,7 @@
 omabook.include("lib/util.js");      // Util: small helpers
 omabook.include("lib/paper.js");     // Paper: kinds and sizes of paper, and what each draws
 omabook.include("lib/store.js");     // Store: notebooks and pages in the change log
+omabook.include("lib/ink.js");       // Ink: the strokes on a page, and the tools that write them
 omabook.include("lib/snapshot.js");  // Snapshot: the notebook file and its book format
 omabook.include("lib/shelf.js");     // Shelf: notebooks in the library, and the view's overview
 
@@ -120,6 +121,16 @@ function setPaper(id, paper) {
 }
 
 function removePage(id) { Shelf.refresh(Store.removePage(id)); }
+
+// A page's ink: its strokes ({id: base64}), what the ink surface did since
+// the pen paused (an ink batch, {add, remove}), and the tools.
+function strokes(pageId) { return Ink.strokes(pageId); }
+function ink(pageId, batch) { return Ink.write(pageId, batch); }
+function inkTools() { return Ink.tools(); }
+
+// Written on a page and done with it: its notebook's file follows the ink,
+// once, rather than at every pause of the pen.
+function pageWritten(pageId) { Shelf.refresh(Store.page(pageId).notebook); }
 
 // The notebook file as it would be written now, and one read back.
 function snapshot(id) { return Snapshot.build(id); }

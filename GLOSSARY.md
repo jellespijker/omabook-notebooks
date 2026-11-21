@@ -41,6 +41,11 @@ _Avoid_: Drawing, sketch, scribble (for the content as a whole)
 One line of ink from pen down to pen up, with its pressure and the moment it was drawn.
 _Avoid_: Path, line, mark
 
+**Tool**:
+What ink is written or taken out with: the pen, the highlighter (a broad pen whose colour shows through)
+or the eraser (of what it covers, or of whole strokes).
+_Avoid_: Brush, mode
+
 **Text block**:
 Typed text placed on a page, set on the paper's lines.
 _Avoid_: Text box, paragraph, typed note

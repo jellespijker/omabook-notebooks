@@ -30,6 +30,8 @@ class Bench:
             XDG_CONFIG_HOME=self.config,
             XDG_CACHE_HOME=os.path.join(self.home, ".cache"),
             XDG_DATA_HOME=os.path.join(self.home, ".data"),
+            # Omabook's own log (omabook.log) and the file manager's folders live here.
+            XDG_STATE_HOME=os.path.join(self.home, ".state"),
             QT_QPA_PLATFORM="offscreen",
         )
         self.env.pop("ANTHROPIC_API_KEY", None)
@@ -87,6 +89,22 @@ class Bench:
 
     def books(self):
         return {entry["id"]: entry for entry in self.json("list")}
+
+    def reach(self, other):
+        """Lets `omabook sync other:<folder>` reach the other bench as if it were another computer.
+
+        Sync goes over ssh; an `ssh` of the scratch folder's own, first on the PATH, runs
+        the command it is given here instead, as the other bench (its HOME and its library)."""
+        folder = os.path.join(self.scratch, "bin")
+        os.makedirs(folder, exist_ok=True)
+        names = ("HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME")
+        there = " ".join(f"{name}={other.env[name]}" for name in names)
+        script = f'#!/bin/sh\nwhile [ "$1" != "--" ]; do shift; done\nshift 2\nexec env {there} QT_QPA_PLATFORM=offscreen sh -c "$*"\n'
+        with open(os.path.join(folder, "ssh"), "w") as file:
+            file.write(script)
+        os.chmod(os.path.join(folder, "ssh"), 0o755)
+        self.env["PATH"] = folder + os.pathsep + self.env["PATH"]
+        return "other:" + other.library
 
     def snapshot_file(self, notebook):
         return os.path.join(self.plugin, "data", "notebooks", notebook + ".omanotebook")
