@@ -6,6 +6,7 @@
     "omabook": "0.1.10",
     "script": "main.js",
     "permissions": [
-        "files"
+        "files",
+        "microphone"
     ]
 }

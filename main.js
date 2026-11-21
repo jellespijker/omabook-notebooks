@@ -22,6 +22,8 @@ omabook.include("lib/ink.js");       // Ink: the strokes on a page, and the tool
 omabook.include("lib/pictures.js");  // Pictures: a picture's bytes, checked and kept in pieces
 omabook.include("lib/content.js");   // Content: text blocks and pictures on a page, placed and layered
 omabook.include("lib/recognised.js"); // Recognised: the words found in a page's ink, kept with it
+omabook.include("lib/recordings.js"); // Recordings: what was said while a page was written, tied to its ink
+omabook.include("lib/transcripts.js"); // Transcripts: the words a recording holds, each with its moment
 omabook.include("lib/snapshot.js");  // Snapshot: the notebook file and its book format
 omabook.include("lib/shelf.js");     // Shelf: notebooks in the library, and the view's overview
 
@@ -93,12 +95,13 @@ function setNotebookPaper(id, paper) {
     return Store.notebook(id);
 }
 
-// How a notebook's handwriting is recognised: `hosted` (true lets a hosted
-// AI server read it, when Omabook's settings allow hosted ones too; else
-// only one's own servers do) and `language` (a hint, such as "nl").
+// How a notebook's handwriting and recordings are recognised: `hosted` (true
+// lets a hosted AI server read its handwriting, when Omabook's settings allow
+// hosted ones too; else only one's own servers do), `speechHosted` (the same
+// for its recordings, chosen apart) and `language` (a hint, such as "nl").
 function setNotebookRecognition(id, details) {
     details = details || {};
-    return Store.changeNotebook(id, {hosted: details.hosted, language: details.language});
+    return Store.changeNotebook(id, {hosted: details.hosted, speechHosted: details.speechHosted, language: details.language});
 }
 
 function removeNotebook(id) { Shelf.remove(id); }
@@ -137,7 +140,11 @@ function removePage(id) { Shelf.refresh(Store.removePage(id)); }
 // A page's ink: its strokes ({id: base64}), what the ink surface did since
 // the pen paused (an ink batch, {add, remove}), and the tools.
 function strokes(pageId) { return Ink.strokes(pageId); }
-function ink(pageId, batch) { return Ink.write(pageId, batch); }
+function ink(pageId, batch) {
+    const count = Ink.write(pageId, batch);
+    Recordings.inked(String(pageId), batch && batch.add);
+    return count;
+}
 function inkTools() { return Ink.tools(); }
 
 // Where a page's strokes lie, {id: {x, y, width, height}} in millimetres:
@@ -152,6 +159,50 @@ function recognised(pageId) { return Recognised.state(pageId); }
 function recognise(pageId, options) { return Recognised.recognise(pageId, options); }
 function correctRecognised(pageId, text) { return Recognised.correct(pageId, text); }
 function recognisedToText(pageId, options) { return Recognised.toText(pageId, options); }
+
+// Recording on a page while it is written (only in the window, once the
+// person said yes): started, paused or gone on with, stopped, and what is
+// under way. When it stops it is kept, and transcribed in the background.
+// The notebook's file follows what a recording added: its entry, its words.
+function recordingWritten(id) {
+    Shelf.refresh(Store.pageEntry(Store.recording(id).fields.page).notebook);
+    return id;
+}
+function transcribeKept(id) {
+    recordingWritten(id);
+    return Transcripts.transcribe(id, {background: true}).then(function (told) { recordingWritten(id); return told; });
+}
+function record(pageId) { return Recordings.start(pageId, transcribeKept); }
+function pauseRecording(paused) { return Recordings.pause(paused !== false); }
+function stopRecording() { return Recordings.stop(transcribeKept); }
+function recording() { return Recordings.under(); }
+
+// A recording kept on a page from its file under data/recordings/ (one cut
+// short when Omabook quit while it recorded): {file}, or the recorder's summary.
+function keepRecording(pageId, summary) { return recordingWritten(Recordings.keep(pageId, summary)); }
+function removeRecording(id) {
+    const notebook = Store.pageEntry(Store.recording(id).fields.page).notebook;
+    Recordings.remove(id);
+    Shelf.refresh(notebook);
+}
+
+// A page's recordings and the moment in one of each stroke written during
+// it; the moment of the ink at a point (millimetres); playing a recording
+// from a moment, or from the ink at a point; and what plays paused
+// ("pause"), gone on with ("play"), moved ("seek", at) or let go ("stop").
+function recordings(pageId) { return Recordings.timeline(pageId); }
+function momentAt(pageId, x, y) { return Recordings.momentAt(pageId, x, y); }
+function play(id, at) { return Recordings.play(id, at); }
+function playFrom(pageId, x, y) { return Recordings.playFrom(pageId, x, y); }
+function playing(how, at) { return Recordings.control(how, at); }
+
+// A recording's transcript and where it stands, a page's, and a promise of
+// one transcribed ({again, background}).
+function transcript(id) { return Transcripts.state(id); }
+function transcripts(pageId) { return Transcripts.ofPage(pageId); }
+function transcribe(id, options) {
+    return Transcripts.transcribe(id, options).then(function (told) { recordingWritten(id); return told; });
+}
 
 // What is on a page but its ink: its text blocks and pictures, lowest first
 // (below the ink, then above it), and where typed lines fall on its paper.

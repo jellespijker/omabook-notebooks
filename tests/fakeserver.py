@@ -50,10 +50,33 @@ class FakeServer:
         with self.lock:
             self.replies.append((200, {"model": model, "choices": [{"message": {"role": "assistant", "content": text}}]}))
 
+    def hear(self, words, model="whisper-1"):
+        """Queues what the transcription endpoint 'hears' in the next recording: words of (text, start s, end s),
+        answered as verbose_json is, with segments split at each word that ends a sentence."""
+        segments, words_out, open_at = [], [], 0
+        for at, (text, start, end) in enumerate(words):
+            words_out.append({"word": text, "start": start, "end": end})
+            if text.endswith((".", "?", "!")) or at == len(words) - 1:
+                said = " ".join(one[0] for one in words[open_at : at + 1])
+                segments.append({"start": words[open_at][1], "end": end, "text": " " + said})
+                open_at = at + 1
+        reply = {"text": " " + " ".join(one[0] for one in words), "language": "english", "segments": segments, "words": words_out}
+        with self.lock:
+            self.replies.append((200, reply))
+
     def asked(self):
         """The chat requests it was sent, as JSON."""
         with self.lock:
-            return [json.loads(one["body"]) for one in self.received if one["line"].startswith("POST") and one["body"]]
+            return [
+                json.loads(one["body"])
+                for one in self.received
+                if one["line"].startswith("POST") and one["body"] and "/audio/" not in one["line"]
+            ]
+
+    def transcriptions(self):
+        """The recordings it was sent to transcribe: each request's form, as bytes."""
+        with self.lock:
+            return [one["body"] for one in self.received if one["line"].startswith("POST") and "/audio/transcriptions" in one["line"]]
 
     def close(self):
         self.http.shutdown()
