@@ -50,8 +50,12 @@ omabook.on("book.opened", function (event) {
 // plugin removed it itself, the notebook is gone already.
 omabook.on("book.removed", function (event) {
     const book = event.book || {};
-    const notebook = book.identifiers && book.identifiers[Shelf.scheme];
-    if (book.generated === omabook.plugin.id && notebook && Store.notebooks().some(function (one) { return one.id === notebook; }))
+    const identifiers = book.identifiers || {};
+    const notebook = identifiers[Shelf.scheme];
+    // The library says whose a book is as `generated`, the command line's
+    // listing among its identifiers: either will do.
+    const mine = (book.generated || identifiers.generated) === omabook.plugin.id;
+    if (mine && notebook && Store.notebooks().some(function (one) { return one.id === notebook; }))
         Shelf.remove(notebook);
 });
 

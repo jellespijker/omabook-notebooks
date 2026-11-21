@@ -13,7 +13,7 @@ and comes as 1.0 with Omabook 0.2.0.
 
 ## What it does so far
 
-- **Notebooks on the shelf.** A notebook is a book of the plugin's own format (`.omabook-notebook`), on the
+- **Notebooks on the shelf.** A notebook is a book of the plugin's own format (`.omanotebook`), on the
   shelf, in collections and in search like any book. *Notebooks* on the shelf, or `Alt+N`, opens the view of
   notebooks and their pages; opening a notebook from the shelf opens it there too.
 - **Pages on paper.** Each page has one paper: lined (narrow, college or wide), squared (5 mm), dotted

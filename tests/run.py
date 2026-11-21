@@ -27,7 +27,7 @@ import sys
 import paper
 from bench import NAME, OMABOOK, ROOT, Bench
 
-SAMPLE = os.path.join(ROOT, "tests", "data", "sample.omabook-notebook")
+SAMPLE = os.path.join(ROOT, "tests", "data", "sample.omanotebook")
 
 
 def ids(pages):
@@ -52,7 +52,7 @@ def making(bench, step):
     made = bench.ok("makeNotebook", "Physics", {"kind": "squared", "size": "A4"})
     book, notebook = made["book"], made["notebook"]
     listed = bench.books()[book]
-    assert listed["title"] == "Physics" and listed["generated"] == NAME and listed["identifiers"]["notebook"] == notebook, listed
+    assert listed["title"] == "Physics" and listed["identifiers"]["generated"] == NAME and listed["identifiers"]["notebook"] == notebook, listed
     shown = notebook_named(bench, "Physics")
     assert shown["id"] == notebook and shown["book"] == book and shown["private"] is True, shown
     assert [page["paper"] for page in shown["pages"]] == [{"kind": "squared", "size": "A4"}], shown

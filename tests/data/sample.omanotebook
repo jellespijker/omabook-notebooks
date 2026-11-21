@@ -1,0 +1,88 @@
+{
+  "format": "omabook-notebook",
+  "version": 1,
+  "notebook": {
+    "id": "nsample01",
+    "title": "Field notes: Scadrial",
+    "created": "2026-11-21T09:00:00.000Z",
+    "private": true
+  },
+  "pages": [
+    {
+      "id": "psample01",
+      "paper": {
+        "kind": "lined",
+        "ruling": "college",
+        "size": "A5"
+      },
+      "created": "2026-11-21T09:00:00.000Z",
+      "strokes": {
+        "s1": "AQIDBAUGBwgJCgsMDQ4PEA==",
+        "s2": "EBESExQVFhcYGRobHB0eHw=="
+      },
+      "text": {
+        "t1": {
+          "text": "# Allomancy\n\nSteel pushes, iron pulls.",
+          "width": 110,
+          "x": 20,
+          "y": 30
+        }
+      },
+      "pictures": {},
+      "recordings": {
+        "r1": {
+          "duration": 64000,
+          "file": "data/recordings/r1.opus",
+          "started": "2026-11-21T09:01:00.000Z"
+        }
+      }
+    },
+    {
+      "id": "psample02",
+      "paper": {
+        "kind": "cornell",
+        "size": "A4"
+      },
+      "created": "2026-11-21T09:10:00.000Z",
+      "strokes": {},
+      "text": {
+        "t1": {
+          "text": "Cue: who is Kelsier?",
+          "width": 55,
+          "x": 5,
+          "y": 40
+        },
+        "t2": {
+          "text": "Summary: the Lord Ruler is not what he seems.",
+          "width": 190,
+          "x": 10,
+          "y": 250
+        }
+      },
+      "pictures": {
+        "i1": {
+          "file": "data/pictures/i1.png",
+          "height": 80,
+          "width": 120,
+          "x": 70,
+          "y": 60
+        }
+      },
+      "recordings": {}
+    },
+    {
+      "id": "psample03",
+      "paper": {
+        "kind": "staves",
+        "size": "Letter"
+      },
+      "created": "2026-11-21T09:20:00.000Z",
+      "strokes": {
+        "s3": "ICEiIyQlJicoKSorLC0uLw=="
+      },
+      "text": {},
+      "pictures": {},
+      "recordings": {}
+    }
+  ]
+}

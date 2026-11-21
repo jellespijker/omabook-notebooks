@@ -1,5 +1,5 @@
-# What the plugin keeps while it runs: stories, jobs, settings.
-data/
+# What the plugin keeps while it runs: notebook files, recordings, settings.
+/data/
 # Scratch of the tests and of trying things out.
 .scratch/
 __pycache__/

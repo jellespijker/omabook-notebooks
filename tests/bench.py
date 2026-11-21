@@ -89,7 +89,7 @@ class Bench:
         return {entry["id"]: entry for entry in self.json("list")}
 
     def snapshot_file(self, notebook):
-        return os.path.join(self.plugin, "data", "notebooks", notebook + ".omabook-notebook")
+        return os.path.join(self.plugin, "data", "notebooks", notebook + ".omanotebook")
 
     def snapshot(self, notebook):
         with open(self.snapshot_file(notebook), encoding="utf-8") as file:
