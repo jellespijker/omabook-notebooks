@@ -4,8 +4,8 @@ import QtQuick.Layouts
 
 // The words found in a page's ink (#6), under the page's tools: read in the
 // background a moment after the pen rests, shown on request (R), corrected
-// by typing in them, and made a text block where the ink lies, beside it or
-// in its place. Strokes chosen with the Select tool (S) are read on their
+// by typing in them or by saying them (its microphone, or Ctrl+M), and made a
+// text block where the ink lies, beside it or in its place. Strokes chosen with the Select tool (S) are read on their
 // own, and their words can become a text block the same way.
 //
 // The script keeps the words with the page and says where they stand
@@ -18,6 +18,8 @@ ColumnLayout {
     property string pageId: ""
     // The strokes chosen with the Select tool, by id.
     property var selection: []
+    // What is said to correct it may go to a hosted speech to text service (the notebook's say).
+    property bool speechHosted: false
     property var told: ({status: "empty", text: "", why: "", hand: false})
     // A selection's words, once read.
     property string picked: ""
@@ -107,18 +109,29 @@ ColumnLayout {
         opacity: 0.8
     }
 
-    ScrollView {
+    RowLayout {
         Layout.fillWidth: true
-        Layout.preferredHeight: 96
         visible: box.told.status !== "empty"
-        TextArea {
-            id: editor
-            placeholderText: "The words of this page's handwriting"
-            wrapMode: TextEdit.Wrap
-            Accessible.name: "Recognised text"
-            // Typed in and left: the person's own words, kept for the ink as it is.
-            onEditingFinished: if (text !== box.told.text) box.ask("correctRecognised", [box.pageId, text], "state")
-            Keys.onEscapePressed: box.forceActiveFocus()
+        ScrollView {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 96
+            TextArea {
+                id: editor
+                placeholderText: "The words of this page's handwriting"
+                wrapMode: TextEdit.Wrap
+                Accessible.name: "Recognised text"
+                // Typed in and left: the person's own words, kept for the ink as it is.
+                onEditingFinished: if (text !== box.told.text) box.ask("correctRecognised", [box.pageId, text], "state")
+                Keys.onEscapePressed: box.forceActiveFocus()
+            }
+        }
+        // Corrected by saying it (#13): what is said goes in at the cursor, kept once the field is left.
+        Dictate {
+            objectName: "recognisedDictate"
+            Layout.alignment: Qt.AlignTop
+            target: editor
+            inUse: box.visible && box.told.status !== "empty"
+            hosted: box.speechHosted
         }
     }
 

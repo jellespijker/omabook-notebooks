@@ -24,6 +24,8 @@ Item {
     readonly property bool isText: item.kind === "text"
     // A picture's bytes, "" while they are on their way from another computer.
     property string picture: ""
+    // Where a text block is typed in: the rail's microphone says into it (#13).
+    readonly property alias field: editor
 
     signal choose()
     signal edit()

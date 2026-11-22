@@ -145,6 +145,8 @@ def private(bench, step, server, notebook, recording):
     serve(bench, HOSTED, hosted=False)
     chosen = bench.ok("setNotebookRecognition", notebook, {"hosted": False, "speechHosted": True})
     assert chosen["speechHosted"] is True and chosen["hosted"] is False, chosen
+    shown = [one for one in bench.ok("notebooks")["notebooks"] if one["id"] == notebook][0]
+    assert shown["speechHosted"] is True, "the view is told, so dictating in it may go hosted too (#13)"
     assert bench.ok("transcript", recording)["hosted"] is True
     assert "unless you allow hosted servers" in bench.refused("transcribe", recording, {"again": True})
     bench.ok("setNotebookRecognition", notebook, {"speechHosted": False})

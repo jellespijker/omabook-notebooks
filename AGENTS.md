@@ -17,9 +17,10 @@ workspace's `AGENTS.md` first.
   example of a plugin; the harness here is its harness.
 
 JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageTools.qml`, `PageRail.qml`,
-`PageReferences.qml`, `BookReferences.qml`, `PageContent.qml`, `ContentItem.qml`,
+`PageReferences.qml`, `BookReferences.qml`, `PageContent.qml`, `PageLayer.qml`, `ContentItem.qml`,
 `PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml`,
-`PageAbout.qml`, `NotebookFind.qml`, `NotebookExport.qml`, `NotebookAsk.qml` and `PaperSheet.qml`), and Python
+`PageAbout.qml`, `NotebookFind.qml`, `NotebookExport.qml`, `NotebookAsk.qml`, `PaperSheet.qml`, and
+`Dictate.qml` with `DictationMic.qml`), and Python
 tests.
 
 ## The harness

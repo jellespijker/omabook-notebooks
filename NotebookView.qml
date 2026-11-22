@@ -303,6 +303,7 @@ FocusScope {
                     entry: view.openedAt >= 0 ? view.shown.pages[view.openedAt] : null
                     hasBefore: view.openedAt > 0
                     loose: !!view.shown && !!view.shown.loose
+                    speechHosted: !!view.shown && view.shown.speechHosted === true
                     hasAfter: view.openedAt >= 0 && view.openedAt < view.shown.pages.length - 1
                     where: view.openedAt >= 0 ? (view.shown.loose ? "note " : "page ") + (view.openedAt + 1) + " of "
                                                 + view.shown.pages.length + " · " + view.shown.title : ""

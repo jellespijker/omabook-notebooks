@@ -6,6 +6,17 @@ Omabook it needs.
 
 ## [Unreleased]
 
+### Added
+
+- Text blocks and recognised text are said as well as typed (#13): with the Type tool, the text block chosen
+  has a microphone in the page's column, and the recognised text has one beside it. Held while you speak, or
+  pressed once to start and again to stop, by mouse, finger or pen, or `Ctrl+M` while typing in it, it writes
+  what you say where the cursor is (a block not open for typing opens for it). It is Omabook's dictation
+  (jellespijker/omabook#148), so it goes through speech to text as you chose it, shows at the top of the
+  window while it listens, and isn't there with the AI Off; to a hosted service only for a notebook that lets
+  its recordings go to one. Needs Omabook 0.4.0; an older Omabook has no microphone, and the rest works as
+  before.
+
 ### Changed
 
 - A page open is the whole view (#14): the notebooks, the paper pickers and the title fold away, and the page

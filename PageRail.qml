@@ -5,11 +5,12 @@ import QtQuick.Shapes
 
 // The slim column of small buttons in the page's margin (#14), so the page
 // has the view: the way back to the pages, the handle that shows every tool
-// (PageTools, \), the pens, the eraser and the colours, undo and redo, and
-// recording, playing and what was said. Each is a fingertip (44 px) for a
-// finger and the pen, says its key in a tooltip and its name to a screen
-// reader; the keys themselves are the page's (InkPage). It scrolls where the
-// window is too short for all of it.
+// (PageTools, \), the pens, the eraser and the colours, the microphone of
+// the text block chosen (#13), undo and redo, and recording, playing and
+// what was said. Each is a fingertip (44 px) for a finger and the pen, says
+// its key in a tooltip and its name to a screen reader; the keys themselves
+// are the page's (InkPage). It scrolls where the window is too short for all
+// of it.
 Flickable {
     id: rail
 
@@ -166,7 +167,7 @@ Flickable {
                 required property var modelData
                 required property int index
                 readonly property bool chosen: rail.page.tool !== "eraser" && !rail.page.resting
-                                               && rail.page.colourAt[rail.page.pen.id] === index
+                                               && !!rail.page.pen && rail.page.colourAt[rail.page.pen.id] === index
                 objectName: "railColour" + index
                 anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
                 implicitWidth: 44
@@ -199,6 +200,24 @@ Flickable {
                     }
                 }
                 onClicked: rail.page.chooseColour(index)
+            }
+        }
+        // Said rather than typed into the text block chosen (#13), where Omabook has dictation.
+        Gap { visible: dictate.shows }
+        Item {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 44
+            height: 44
+            visible: dictate.shows
+            Dictate {
+                id: dictate
+                objectName: "railDictate"
+                anchors.centerIn: parent
+                target: rail.page.items.chosenField
+                inUse: rail.page.tool === "type" && rail.page.items.textChosen
+                hosted: rail.page.speechHosted
+                onStarted: rail.page.items.dictating()
+                onHearing: rail.page.items.dictating()
             }
         }
         Gap {}

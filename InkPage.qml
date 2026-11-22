@@ -87,6 +87,8 @@ FocusScope {
     property var asked: ({})
     // What is on the page but its ink: text blocks and pictures.
     readonly property var chosenItem: pageContent.chosenItem
+    // What is dictated may go to a hosted speech to text service: the notebook says so for its recordings (#13).
+    property bool speechHosted: false
     // For PageTools: the ink surface, the text blocks and pictures, and what the lasso holds.
     readonly property alias ink: surface
     readonly property alias items: pageContent
@@ -261,30 +263,6 @@ FocusScope {
         }
     }
 
-    // What lies below the ink, or above it, lowest first.
-    component Layer: Item {
-        id: lying
-        required property string kind
-        anchors.fill: parent
-        Repeater {
-            model: pageContent.lying(lying.kind)
-            delegate: ContentItem {
-                required property var modelData
-                item: modelData
-                plugin: page.plugin
-                unit: sheet.unit
-                step: pageContent.content.typing.step
-                arranging: page.tool === "type"
-                chosen: pageContent.chosen === item.id
-                editing: pageContent.editing === item.id
-                onChoose: { pageContent.chosen = item.id; if (pageContent.editing !== item.id) page.takeFocus() }
-                onEdit: { pageContent.chosen = item.id; pageContent.editing = item.id }
-                onPlaced: (rectangle) => pageContent.placeItem(item.id, rectangle)
-                onTyped: (text, needs) => pageContent.typed(item.id, text, needs)
-            }
-        }
-    }
-
     PageContent {
         id: pageContent
         plugin: page.plugin
@@ -334,6 +312,7 @@ FocusScope {
             plugin: page.plugin
             pageId: page.pageId
             selection: page.selection
+            speechHosted: page.speechHosted
             onProblem: (why) => page.problem = why
             onChanged: { page.selection = []; page.selected = null; page.reload() }
         }
@@ -380,7 +359,7 @@ FocusScope {
                         else pageContent.newText(at)
                     }
                 }
-                Layer { kind: "below" }
+                PageLayer { page: page; kind: "below"; unit: sheet.unit }
 
                 InkSurface {
                     id: surface
@@ -402,7 +381,7 @@ FocusScope {
                         recognisedText.inkChanged()
                     }
                 }
-                Layer { kind: "above" }
+                PageLayer { page: page; kind: "above"; unit: sheet.unit }
                 PageReferences {
                     id: references
                     anchors.fill: parent

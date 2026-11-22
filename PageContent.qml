@@ -20,6 +20,9 @@ Item {
     property string chosen: ""
     property string editing: ""
     readonly property var chosenItem: content.items.find(function (one) { return one.id === here.chosen }) || null
+    readonly property bool textChosen: !!chosenItem && chosenItem.kind === "text"
+    // The chosen text block's field (PageLayer says which), dictated into from the rail (#13).
+    property Item chosenField: null
     // The writes asked of the script and not answered yet.
     property var asked: ({})
 
@@ -82,6 +85,8 @@ Item {
         chosen = id
         editing = id
     }
+    // Dictating into the chosen text block: it is opened for typing, so the words (or voxtype's keys) go there.
+    function dictating() { if (textChosen) editing = chosen }
     function editChosen() {
         if (chosenItem && chosenItem.kind === "text") editing = chosen
         else if (!chosenItem) newText(null)
