@@ -24,6 +24,7 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Pdf` | a PDF file written: pages of lines, text, pictures and links; knows nothing of notebooks |
 | `Paper` | the kinds of paper and sizes, and what each draws, in millimetres |
 | `Typed` | a text block's words: plain text or Markdown, cleaned, never HTML |
+| `Ai` | the one way to the model the person chose (`omabook.ai`), its answers checked, and whether speech to text may be asked |
 | `Store` | **the live data**: notebooks, pages, text blocks, pictures, recognised text, recordings, transcripts, mentions and place references as things in `omabook.log` (ADR 0002) |
 | `Ink` | the strokes on a page (ink batches from Omabook's ink surface and its lasso, through `Store`), where each lies, and the tools |
 | `Pictures` | a picture's bytes: checked, capped, in pieces for the log, joined again |
@@ -40,7 +41,6 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `MarkdownExport` | a notebook's pages' words as Markdown, pictures as files beside it |
 | `Exports` | the pages chosen, saved as PDF or Markdown where the person chooses (`ui.saveFile`), or under `data/exports/` from the command line |
 | `Prompts` | every word sent to a model |
-| `Ai` | the one way to the model the person chose (`omabook.ai`), its answers checked |
 | `Asking` | a question about a notebook, from its own words, under recognition's privacy rule |
 | `main.js` | the front door: registers the format, the view, commands and events |
 

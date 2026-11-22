@@ -8,6 +8,7 @@ server is an address that is never asked (`hosted.invalid`): Omabook refuses bef
 """
 
 import strokes
+from bench import not_chosen
 from fakeserver import FakeServer
 
 HOSTED = "https://hosted.invalid/v1"
@@ -93,7 +94,7 @@ def turning_into_text(bench, step, server, page):
 
 def private(bench, step, server, notebook, page):
     serve(bench, HOSTED, hosted=True)
-    assert "only where you chose it" in bench.refused("recognise", page, {"again": True})
+    assert not_chosen(bench.refused("recognise", page, {"again": True}))
     serve(bench, HOSTED, hosted=False)
     chosen = bench.ok("setNotebookRecognition", notebook, {"hosted": True, "language": "en"})
     assert chosen["hosted"] is True and chosen["language"] == "en", chosen
@@ -103,7 +104,7 @@ def private(bench, step, server, notebook, page):
     loose = bench.ok("makeLooseNote", {})
     bench.ok("ink", loose, strokes.batch(strokes.line(5, 5)))
     serve(bench, HOSTED, hosted=True)
-    assert "only where you chose it" in bench.refused("recognise", loose, {})
+    assert not_chosen(bench.refused("recognise", loose, {}))
     assert len(server.asked()) == 5, "nothing went anywhere else"
     bench.ok("removePage", loose)
     step("a hosted server reads handwriting only when the settings allow it and the notebook chose it; a loose note never")

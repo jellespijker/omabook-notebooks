@@ -6,8 +6,10 @@ import QtQuick.Layouts
 // What was said while the page was written (#5), beside it: each
 // recording's transcript, in its segments, and where it stands (heard,
 // being listened to, waiting for the server, or that there is no server of
-// one's own that transcribes speech). A tap on a segment plays from it, and
-// while a recording plays the segment it is at is marked. W shows or hides it.
+// one's own that transcribes speech, in Omabook's words). A tap on a segment
+// plays from it, and while a recording plays the segment it is at is marked.
+// A transcript without each word's moment (voxtype's) says that a word plays
+// from the start of its sentence. W shows or hides it.
 Pane {
     id: pane
 
@@ -26,6 +28,7 @@ Pane {
     function words(one) {
         switch (one.status) {
         case "current": return "Heard by " + one.model + ", " + one.server + "."
+            + (one.timed === false ? " It gives no moment for each word, so a word found plays from the start of its sentence." : "")
         case "untranscribed": return "Not transcribed yet."
         case "transcribing": return "Listening to the recording…"
         case "waiting": return "Waiting for the server: " + one.why
@@ -68,7 +71,8 @@ Pane {
                             id: segment
                             required property var modelData
                             readonly property bool now: !!pane.playing && pane.playing.id === one.modelData.id
-                                && pane.playing.at >= modelData.start && pane.playing.at < modelData.end + 500
+                                && pane.playing.at >= modelData.start
+                                && (modelData.end <= modelData.start || pane.playing.at < modelData.end + 500)
                             Layout.fillWidth: true
                             text: modelData.text
                             wrapMode: Text.Wrap

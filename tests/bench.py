@@ -14,6 +14,13 @@ OMABOOK = os.environ.get("OMABOOK") or shutil.which("omabook")
 NAME = "notebooks"
 
 
+def not_chosen(message):
+    """Omabook refused a hosted server the plugin didn't ask for: in Omabook 0.2.0's words, or in those
+    of its AI registry (jellespijker/omabook#143). Answers whether it did, saying what it said if not."""
+    assert "only where you chose it" in message or "asked for your own computers only" in message, message
+    return True
+
+
 class Bench:
     def __init__(self):
         self.scratch = tempfile.mkdtemp(prefix="notebooks-test-")
@@ -47,6 +54,12 @@ class Bench:
             config = json.load(file)
         config.update(fields)
         config = {key: value for key, value in config.items() if value is not None}
+        # Omabook 0.3.0 keeps whether hosted is allowed per capability (its AI registry,
+        # jellespijker/omabook#143), once it has written them: recognition's `hosted` is said there too.
+        hosted = (fields.get("recognition") or {}).get("hosted")
+        if isinstance(config.get("capabilities"), dict) and hosted is not None:
+            for capability in ("handwriting", "speech-to-text"):
+                config["capabilities"].setdefault(capability, {})["hosted"] = hosted
         with open(path, "w") as file:
             json.dump(config, file)
 

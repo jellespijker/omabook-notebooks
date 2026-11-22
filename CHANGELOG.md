@@ -6,6 +6,13 @@ Omabook it needs.
 
 ## [Unreleased]
 
+### Changed
+
+- A recording that can't be transcribed says why in Omabook's own words (its speech-to-text status), so it
+  stays right as Omabook's ways change: voxtype first now, then whisper.cpp, then a server (#12). A transcript
+  without each word's moment, as voxtype's is, says so, and a word found in it plays from the start of its
+  sentence. Works with Omabook 0.2.0 too, which says it through its recognition status.
+
 ## [1.0.0] - 2026-11-21
 
 Needs Omabook 0.2.0.

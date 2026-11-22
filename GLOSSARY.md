@@ -70,7 +70,9 @@ the recording, so the ink plays what was said as it was written.
 _Avoid_: Audio note, voice memo, clip (for a whole recording)
 
 **Transcript**:
-The words a recording was found to hold, each with its moment in the recording.
+The words a recording was found to hold, each with its moment in the recording where the way that
+transcribed it gives them (voxtype doesn't: the transcript isn't *timed*, and a word plays from its
+sentence's start).
 _Avoid_: Subtitles, captions
 
 **Recognised text**:

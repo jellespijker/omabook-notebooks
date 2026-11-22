@@ -34,8 +34,11 @@ a save dialog for plugins, `omabook://` links and the AI's whereabouts).
   AI server that may read handwriting, the page says so and the ink is kept as it is.
 - **Recordings.** `V` records what is said while you write, and each stroke keeps its moment in the
   recording: with the Listen tool (`A`) a tap on the ink plays from when it was written, and while a recording
-  plays the ink shows as it was then. Each recording is transcribed in the background, word by word, by your
-  own transcription server or whisper.cpp, and shown beside the page (`W`); with none, it says so. Speech goes
+  plays the ink shows as it was then. Each recording is transcribed in the background by the way Omabook's
+  settings chose for speech to text (voxtype or whisper.cpp on this computer, or your own transcription
+  server), and shown beside the page (`W`); with none, it says why, in Omabook's words. whisper.cpp and most
+  servers give each word its moment; voxtype doesn't, so there a word found plays from the start of its
+  sentence, and the transcript says so. Speech goes
   to a hosted server only for a notebook that chose it, and only when Omabook's settings allow it.
 - **The lasso.** `L` goes around strokes to move, recolour (`1` to `4`), copy, cut, paste or take them away;
   it is kept as erasing is, so it merges between computers too.

@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 
 import opus
 import strokes
-from bench import Bench
+from bench import Bench, not_chosen
 from fakeserver import FakeServer
 
 HOSTED = "https://hosted.invalid/v1"
@@ -23,14 +23,30 @@ T0 = int(datetime(2026, 11, 21, 9, 0, tzinfo=UTC).timestamp() * 1000)
 # Recorded for ten seconds, paused for ten, and on for fifty more: a minute of sound.
 PARTS = [{"at": 0, "started": STARTED}, {"at": 10_000, "started": "2026-11-21T09:00:20.000Z"}]
 NO_WHISPER = "/nonexistent/whisper-cli"
+NO_VOXTYPE = "/nonexistent/voxtype"
+# voxtype's command, standing in as Omabook's own tests have it: what it does, then the text after an
+# empty line, with no moment for any word. And ffmpeg's, which makes the recording the WAV voxtype reads.
+VOXTYPE = 'echo "Loading audio file"\necho\necho "Good morning, from voxtype."\n'
+FFMPEG = 'for last; do :; done\nprintf RIFF > "$last"\n'
 
 
 def serve(bench, url, hosted=False):
     bench.configure(
         ai_provider="openai",
         ai_endpoint={"preset": "custom", "base_url": url},
-        recognition={"whisper_program": NO_WHISPER, "hosted": hosted},
+        recognition={"whisper_program": NO_WHISPER, "voxtype_program": NO_VOXTYPE, "hosted": hosted},
     )
+
+
+def stand_in(bench, name, script):
+    """A program on the PATH for a step alone: in a folder of its own, gone after it."""
+    folder = os.path.join(bench.scratch, "speech")
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, name)
+    with open(path, "w") as file:
+        file.write("#!/bin/sh\n" + script)
+    os.chmod(path, 0o755)
+    return path
 
 
 def put(bench, name, data):
@@ -91,10 +107,11 @@ def keeping(bench, step, notebook, page, ids):
 def transcribing(bench, step, server, page, recording, book):
     serve(bench, HOSTED)
     told = bench.ok("transcript", recording)
-    assert told["status"] == "unavailable" and "aren't transcribed here" in told["why"] and "kept either way" in told["why"], told
+    assert told["status"] == "unavailable" and told["why"].startswith("Recordings aren't transcribed here: "), told
+    assert told["why"].endswith(" The recording is kept either way.") and "hosted.invalid is someone else's computer" in told["why"], told
     assert bench.ok("transcribe", recording, {"background": True})["status"] == "unavailable"
     assert "someone else's computer" in bench.refused("transcribe", recording, {})
-    step("with no transcription server of one's own the recording says so plainly, and asking is refused")
+    step("with no way of one's own to transcribe, the recording says why in Omabook's words, and asking is refused")
 
     serve(bench, server.url)
     assert bench.ok("transcript", recording)["status"] == "untranscribed"
@@ -103,6 +120,7 @@ def transcribing(bench, step, server, page, recording, book):
     assert heard["status"] == "current" and heard["text"] == "Kelsier pushes steel. Then lands.", heard
     assert [one["text"] for one in heard["segments"]] == ["Kelsier pushes steel.", "Then lands."], heard["segments"]
     assert heard["segments"][1]["words"][0] == ["Then", 9_800, 10_200] and heard["segments"][0]["start"] == 1_500, heard
+    assert heard["timed"] is True, heard
     sent = server.transcriptions()
     assert len(sent) == 1 and b'filename="rtest1.opus"' in sent[0] and b"OggS" in sent[0], "the recording went as a file"
     bench.ok("transcribe", recording, {"background": True})
@@ -115,15 +133,15 @@ def transcribing(bench, step, server, page, recording, book):
     step("what was said is read with its page in the notebook's book, where search can find it")
 
     hits = [one for one in bench.ok("find", "then land") if one["kind"] == "transcript"]
-    assert [(one["page"], one["recording"], one["at"]) for one in hits] == [(page, recording, 9_800)], hits
+    assert [(one["page"], one["recording"], one["at"], one["timed"]) for one in hits] == [(page, recording, 9_800, True)], hits
     step("find has what was said too, at the moment in the recording the words were said")
 
 
 def private(bench, step, server, notebook, recording):
     serve(bench, HOSTED, hosted=True)
-    assert "only where you chose it" in bench.refused("transcribe", recording, {"again": True})
+    assert not_chosen(bench.refused("transcribe", recording, {"again": True}))
     bench.ok("setNotebookRecognition", notebook, {"hosted": True})
-    assert "only where you chose it" in bench.refused("transcribe", recording, {"again": True}), "handwriting's choice isn't speech's"
+    assert not_chosen(bench.refused("transcribe", recording, {"again": True})), "handwriting's choice isn't speech's"
     serve(bench, HOSTED, hosted=False)
     chosen = bench.ok("setNotebookRecognition", notebook, {"hosted": False, "speechHosted": True})
     assert chosen["speechHosted"] is True and chosen["hosted"] is False, chosen
@@ -166,6 +184,25 @@ def travelling(bench, step, page, recording):
         shutil.rmtree(other.scratch, ignore_errors=True)
 
 
+def untimed(bench, step, page, recording):
+    """voxtype on this computer, first where nothing else was chosen (jellespijker/omabook#146), gives no moments."""
+    voxtype = stand_in(bench, "voxtype", VOXTYPE)
+    stand_in(bench, "ffmpeg", FFMPEG)
+    path = bench.env["PATH"]
+    bench.env["PATH"] = os.path.dirname(voxtype) + os.pathsep + path
+    try:
+        bench.configure(recognition={"voxtype_program": voxtype})
+        heard = bench.ok("transcribe", recording, {})
+        assert heard["status"] == "current" and heard["text"] == "Good morning, from voxtype." and heard["timed"] is False, heard
+        assert [(one["start"], one["words"]) for one in heard["segments"]] == [(0, [])], heard["segments"]
+        hits = [one for one in bench.ok("find", "morning") if one["kind"] == "transcript"]
+        assert [(one["recording"], one["at"], one["timed"]) for one in hits] == [(recording, 0, False)], hits
+        step("a transcript without each word's moment says so, and a word found in it plays from its sentence's start")
+    finally:
+        bench.env["PATH"] = path
+        shutil.rmtree(os.path.dirname(voxtype), ignore_errors=True)
+
+
 def check(bench, step):
     server = FakeServer()
     try:
@@ -184,6 +221,7 @@ def check(bench, step):
         moments = bench.ok("recordings", page)["moments"]
         assert ids["early"] not in moments and moments[next(iter(moved["add"]))] == {"recording": again, "at": 2_000}, moments
         step("a stroke moved with the lasso keeps its moment in the recording, so it still plays what was said")
+        untimed(bench, step, page, again)
         bench.ok("removeNotebook", made["notebook"])
         assert not os.path.exists(os.path.join(bench.plugin, "data", "recordings", "rtest2.opus"))
         step("a recording kept from its file alone is stamped from the moment it says; it goes when its notebook does")

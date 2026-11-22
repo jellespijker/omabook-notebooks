@@ -6,7 +6,9 @@ import QtQuick.Layouts
 // Finding words in the notebooks (#7), over the list of them: what was
 // typed, read from the ink and said while writing (the script's `find`).
 // Each hit says where it is, and choosing one opens its page; one in a
-// recording plays from the moment the words were said. Escape, or clearing
+// recording plays from the moment the words were said, or from the start of
+// their sentence where the transcript has no moment for each word (voxtype
+// gives none), which the hit says. Escape, or clearing
 // the words, shows the notebooks again.
 ColumnLayout {
     id: box
@@ -19,7 +21,10 @@ ColumnLayout {
     spacing: 4
 
     function kindOf(hit) {
-        return hit.kind === "typed" ? "typed" : hit.kind === "recognised" ? "handwriting" : "said at " + time(hit.at)
+        if (hit.kind !== "transcript")
+            return hit.kind === "typed" ? "typed" : "handwriting"
+        return hit.timed === false ? "said in the sentence from " + time(hit.at) + ": this transcript has no moment for each word"
+                                   : "said at " + time(hit.at)
     }
     function time(ms) {
         const s = Math.floor((ms || 0) / 1000)

@@ -20,6 +20,7 @@ omabook.include("lib/images.js");    // Images: a PNG's or a JPEG's bytes, as a 
 omabook.include("lib/pdf.js");       // Pdf: a PDF file written, of lines, text and pictures
 omabook.include("lib/paper.js");     // Paper: kinds and sizes of paper, and what each draws
 omabook.include("lib/typed.js");     // Typed: a text block's words, plain or Markdown, never HTML
+omabook.include("lib/ai.js");        // Ai: the AI the person chose, its answers checked, and where speech can go
 omabook.include("lib/store.js");     // Store: notebooks, pages and what is on them in the change log
 omabook.include("lib/ink.js");       // Ink: the strokes on a page, and the tools that write them
 omabook.include("lib/pictures.js");  // Pictures: a picture's bytes, checked and kept in pieces
@@ -36,7 +37,6 @@ omabook.include("lib/pdfexport.js"); // PdfExport: pages drawn as a PDF, ink as 
 omabook.include("lib/markdownexport.js"); // MarkdownExport: pages' words as Markdown, pictures beside it
 omabook.include("lib/exports.js");   // Exports: the pages chosen, saved as PDF or Markdown
 omabook.include("lib/prompts.js");   // Prompts: every word sent to a model
-omabook.include("lib/ai.js");        // Ai: the model the person chose, its answers checked
 omabook.include("lib/asking.js");    // Asking: a question about a notebook, from its own words
 
 // 2. What the plugin adds to Omabook.
