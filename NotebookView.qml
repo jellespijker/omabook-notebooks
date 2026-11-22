@@ -7,8 +7,10 @@ import Omabook
 // loose notes on the left, the pages of the one chosen on the right, each on
 // its paper. Narrow (beside the page, or a small window) it shows one of the
 // two at a time, and Backspace goes from the pages back to the list. A page
-// chosen is opened to write on (InkPage, #3), and Backspace goes back from
-// it to the pages. A page's thumbnail shows its ink, text blocks and pictures.
+// chosen is opened to write on (InkPage, #3), and Backspace or Escape goes
+// back from it to the pages. An open page is the whole view (#14): the list,
+// the paper pickers and the notebook's title fold away. A page's thumbnail
+// shows its ink, text blocks and pictures.
 // Over the list, words are found in every notebook (NotebookFind, #7).
 // Under a notebook's title it is exported (NotebookExport) and asked about
 // (NotebookAsk, #9).
@@ -60,6 +62,7 @@ FocusScope {
         return overview.notebooks.find(function (one) { return one.id === chosen }) || null
     }
 
+    readonly property bool writing: opened !== ""
     readonly property int openedAt: shown ? shown.pages.findIndex(function (one) { return one.id === opened }) : -1
 
     function reload() {
@@ -131,8 +134,13 @@ FocusScope {
         }
     }
 
+    // Escape goes back from a page to the pages, rather than closing the view.
+    Keys.onShortcutOverride: (event) => event.accepted = event.key === Qt.Key_Escape && view.writing
     Keys.onPressed: function (event) {
-        if (event.key === Qt.Key_N && !(event.modifiers & Qt.ControlModifier) && view.shown && !view.shown.loose) {
+        if (event.key === Qt.Key_Escape && view.writing) {
+            view.back()
+            event.accepted = true
+        } else if (event.key === Qt.Key_N && !(event.modifiers & Qt.ControlModifier) && view.shown && !view.shown.loose) {
             view.ask("addPage", [view.shown.id, view.paperChosen()])
             event.accepted = true
         } else if (event.key === Qt.Key_Return && view.opened === "" && view.shown && view.shown.pages.length > 0) {
@@ -149,7 +157,7 @@ FocusScope {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: view.narrow ? 8 : 16
+        anchors.margins: view.writing ? 2 : view.narrow ? 8 : 16
         spacing: 8
 
         Label {
@@ -163,6 +171,7 @@ FocusScope {
         // What a new page is printed with.
         RowLayout {
             Layout.fillWidth: true
+            visible: !view.writing
             spacing: 6
             ComboBox { id: kindBox; model: view.choices.kinds.map(function (k) { return k.title }) }
             ComboBox {
@@ -182,7 +191,7 @@ FocusScope {
 
             // The notebooks and the loose notes.
             ColumnLayout {
-                visible: !view.narrow || view.chosen === null
+                visible: !view.writing && (!view.narrow || view.chosen === null)
                 Layout.fillHeight: true
                 Layout.fillWidth: view.narrow
                 Layout.preferredWidth: view.narrow ? -1 : 260
@@ -247,7 +256,7 @@ FocusScope {
                     visible: view.opened === ""
                     TextField {
                         Layout.fillWidth: true
-                        readOnly: !view.shown || view.shown.loose
+                        readOnly: !view.shown || !!view.shown.loose
                         text: view.shown ? view.shown.title : ""
                         font.pixelSize: 18
                         onAccepted: view.ask("renameNotebook", [view.shown.id, text])
@@ -284,21 +293,7 @@ FocusScope {
                     onChanged: view.reload()
                 }
 
-                // The page open, written on.
-                RowLayout {
-                    Layout.fillWidth: true
-                    visible: view.opened !== ""
-                    Action { text: "← Pages"; onClicked: view.back() }
-                    Action { text: "Export"; checkable: true; checked: view.tool === "export"
-                             onClicked: view.tool = checked ? "export" : "" }
-                    Label {
-                        Layout.fillWidth: true
-                        text: view.openedAt >= 0 ? (view.shown.loose ? "Note " : "Page ") + (view.openedAt + 1) + " of "
-                                                   + view.shown.pages.length + "  ·  " + view.shown.title : ""
-                        elide: Text.ElideRight
-                        color: theme.colors.muted
-                    }
-                }
+                // The page open, written on: the whole view.
                 InkPage {
                     id: inkPage
                     visible: view.opened !== ""
@@ -309,7 +304,11 @@ FocusScope {
                     hasBefore: view.openedAt > 0
                     loose: !!view.shown && !!view.shown.loose
                     hasAfter: view.openedAt >= 0 && view.openedAt < view.shown.pages.length - 1
+                    where: view.openedAt >= 0 ? (view.shown.loose ? "note " : "page ") + (view.openedAt + 1) + " of "
+                                                + view.shown.pages.length + " · " + view.shown.title : ""
                     onTurn: (by) => view.openPage(view.shown.pages[view.openedAt + by].id)
+                    onBack: view.back()
+                    onExportAsked: view.tool = view.tool === "export" ? "" : "export"
                 }
 
                 GridView {

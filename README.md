@@ -26,6 +26,10 @@ a save dialog for plugins, `omabook://` links and the AI's whereabouts).
   `[` and `]` thinner and thicker, `F` what a finger does, `Ctrl+Z` and `Ctrl+Shift+Z`, `Ctrl+=` and
   `Ctrl+-`. Each pause of the pen is one write to the change log, so a page written on two computers has
   both computers' strokes.
+- **The page is the view.** An open page fills the view and fits its height. Its tools are a slim column in
+  the margin, for a finger and the pen too: back to the pages, the pens, the eraser, the colours, undo and
+  redo, Record, Play and what was said. `\` or the column's handle shows every tool above the page; `Escape`
+  puts them away, and again (or `Backspace`) goes back to the pages.
 - **Recognised text.** A moment after the pen rests, a page's handwriting is read to text by a vision
   model on your AI server, in the background, and kept with the strokes it came from; when the ink changes it
   is read again. `R` shows it under the tools, where it is corrected by typing in it (your words are never

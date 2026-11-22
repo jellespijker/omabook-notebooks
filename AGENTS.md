@@ -16,7 +16,7 @@ workspace's `AGENTS.md` first.
 - Storyteller ([omabook-storyteller](https://github.com/jellespijker/omabook-storyteller)) is the worked
   example of a plugin; the harness here is its harness.
 
-JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageTools.qml`,
+JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageTools.qml`, `PageRail.qml`,
 `PageReferences.qml`, `BookReferences.qml`, `PageContent.qml`, `ContentItem.qml`,
 `PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml`,
 `PageAbout.qml`, `NotebookFind.qml`, `NotebookExport.qml`, `NotebookAsk.qml` and `PaperSheet.qml`), and Python

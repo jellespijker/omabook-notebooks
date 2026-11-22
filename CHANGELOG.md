@@ -8,6 +8,13 @@ Omabook it needs.
 
 ### Changed
 
+- A page open is the whole view (#14): the notebooks, the paper pickers and the title fold away, and the page
+  fits the height, its zoom kept from page to page. The tools are a slim column in the page's margin, each a
+  fingertip for a finger or the pen, saying its key: back to the pages, the pens, the eraser, the colours,
+  undo and redo, Record, Play and what was said. Every tool shows above the page with `\` or the column's
+  handle, and Escape puts them away; Escape again, or Backspace, goes back to the pages. What is being
+  recorded or played is a slim bar under the page, which fades while the pen writes.
+
 - A recording that can't be transcribed says why in Omabook's own words (its speech-to-text status), so it
   stays right as Omabook's ways change: voxtype first now, then whisper.cpp, then a server (#12). A transcript
   without each word's moment, as voxtype's is, says so, and a word found in it plays from the start of its

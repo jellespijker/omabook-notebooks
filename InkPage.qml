@@ -34,7 +34,11 @@ import Omabook
 // book (#8), B refers to where the reader is (Shift+B to the words copied
 // there), tied to what the lasso or the Select tool holds or the text block
 // chosen; the chips (PageReferences) open the book there, G the next one.
-// The tools above are PageTools.
+// The page is the whole view (#14): it fits the height, and zoom stays from
+// page to page. In its margin a slim column (PageRail) has the way back, the
+// pens, the eraser, the colours, undo, recording and what was said; every
+// tool (PageTools) shows above the page with \ or the rail's handle, and
+// Escape puts them away again.
 //
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
@@ -58,7 +62,13 @@ FocusScope {
     property bool hasBefore: false
     property bool hasAfter: false
     property bool loose: false
+    // Where the page is, for the way back: "Page 2 of 5 · Physics".
+    property string where: ""
     signal turn(int by)
+    signal back()
+    signal exportAsked()
+    // Every tool shown above the page, not only the margin's.
+    property bool allTools: false
 
     readonly property var tools: plugin === "" ? null : backend.scripts.call(plugin, "inkTools", [])
     // "pen", "highlighter", "eraser", "lasso", "type", "select" or "listen".
@@ -82,13 +92,15 @@ FocusScope {
     readonly property alias items: pageContent
     readonly property int lassoed: surface.selection.count
     readonly property int referenceCount: references.list.length
+    readonly property alias recordings: pageRecordings
 
     readonly property bool resting: tool === "type" || tool === "select" || tool === "listen"
     readonly property var pen: tools ? tools.pens.find(function (one) {
         return one.id === (page.tool === "eraser" || page.tool === "lasso" || page.resting ? "pen" : page.tool)
     }) : null
     readonly property var colours: tools && pen ? tools.colours[pen.id] : []
-    readonly property real fit: Math.max(0.5, (flick.width - 24) / sheet.layout.width)
+    // The whole page in the view, its height or its width, whichever is less.
+    readonly property real fit: Math.max(0.5, Math.min((flick.width - 24) / sheet.layout.width, (flick.height - 24) / sheet.layout.height))
 
     function widthOf(id) {
         if (page.widthAt[id] !== undefined) return page.widthAt[id]
@@ -187,7 +199,7 @@ FocusScope {
     }
     function takeFocus() { forceActiveFocus() }
 
-    onPageIdChanged: { zoom = 1; problem = ""; selection = []; selected = null; reload() }
+    onPageIdChanged: { problem = ""; selection = []; selected = null; reload() }
     Component.onCompleted: reload()
 
     Connections {
@@ -235,6 +247,8 @@ FocusScope {
         plain[Qt.Key_L] = function () { page.choose("lasso") }
         plain[Qt.Key_B] = function () { page.refer(shift) }
         plain[Qt.Key_G] = function () { page.followReference(shift ? -1 : 1) }
+        plain[Qt.Key_Backslash] = function () { page.allTools = !page.allTools }
+        if (page.allTools) plain[Qt.Key_Escape] = function () { page.allTools = false }
         if (page.tool === "type")
             Object.assign(plain, pageContent.keys(event))
         const one = ctrl ? withCtrl[event.key] : plain[event.key]
@@ -280,12 +294,28 @@ FocusScope {
         onPictureAdded: { page.problem = ""; page.choose("type") }
     }
 
+    PageRail {
+        id: rail
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: implicitWidth
+        page: page
+        where: page.where
+        onBack: page.back()
+    }
+
     ColumnLayout {
-        anchors.fill: parent
+        anchors.left: rail.right
+        anchors.leftMargin: 4
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         spacing: 6
 
         PageTools {
             Layout.fillWidth: true
+            visible: page.allTools
             page: page
         }
 
@@ -315,17 +345,6 @@ FocusScope {
             pageId: page.pageId
             loose: page.loose
             onProblem: (why) => page.problem = why
-        }
-
-        PageRecordings {
-            id: pageRecordings
-            Layout.fillWidth: true
-            plugin: page.plugin
-            pageId: page.pageId
-            onProblem: (why) => page.problem = why
-            onShowInk: (strokes) => surface.load(strokes)
-            onReplayed: page.reload()
-            onTranscribed: transcriptPane.reload()
         }
 
         Flickable {
@@ -448,6 +467,18 @@ FocusScope {
                 onActiveChanged: if (active) from = page.zoom
                 onActiveScaleChanged: page.zoom = Math.max(0.5, Math.min(3, from * activeScale))
             }
+        }
+
+        PageRecordings {
+            id: pageRecordings
+            Layout.fillWidth: true
+            faded: surface.writing
+            plugin: page.plugin
+            pageId: page.pageId
+            onProblem: (why) => page.problem = why
+            onShowInk: (strokes) => surface.load(strokes)
+            onReplayed: page.reload()
+            onTranscribed: transcriptPane.reload()
         }
     }
 

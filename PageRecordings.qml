@@ -2,8 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// What was said while a page was written (#5), under the page's tools:
-// recording while writing (V, again to stop; the window asks once whether
+// What was said while a page was written (#5), a slim bar under the page
+// that fades while the pen writes (#14; `faded`), its row scrolling sideways
+// rather than taking more rows: recording while writing (V, or the margin's
+// button, PageRail; again to stop; the window asks once whether
 // Notebooks may use the microphone, and its mark says it records), the page's
 // recordings to play, and while one plays, the ink as it was written then:
 // the strokes written later are left out (`showInk`), and the ones written
@@ -40,6 +42,13 @@ ColumnLayout {
         const m = line.moments[id]
         return m.recording === box.playing.id && m.at <= box.playing.at && m.at > box.playing.at - 3000 }) : []
 
+    // The recordings that can be played here, newest last.
+    readonly property var playable: line.recordings.filter(function (one) { return one.here && !one.recording })
+    // While the pen writes, the bar stands back.
+    property bool faded: false
+    opacity: faded ? 0.3 : 1
+    Behavior on opacity { NumberAnimation { duration: 200 } }
+
     spacing: 4
     visible: line.recordings.length > 0 || !!under || (!!told.recording && !!told.recording.problem)
 
@@ -54,6 +63,11 @@ ColumnLayout {
         asked = next
     }
     function toggle() { if (under) ask("stopRecording", []); else ask("record", [pageId]) }
+    // The margin's Play: what plays paused or gone on with, else the newest from its start.
+    function playOrPause() {
+        if (playing) ask("playing", [playing.playing ? "pause" : "play"])
+        else if (playable.length) ask("play", [playable[playable.length - 1].id, 0])
+    }
     function playFrom(at) { ask("playFrom", [pageId, at.x, at.y]) }
     function time(ms) {
         const s = Math.floor((ms || 0) / 1000)
@@ -90,48 +104,54 @@ ColumnLayout {
         }
     }
 
-    Flow {
+    Flickable {
         Layout.fillWidth: true
-        spacing: 4
-        Button {
-            flat: true
-            text: box.under ? "Stop recording (V)" : "Record (V)"
-            enabled: !box.elsewhere
-            onClicked: box.toggle()
-        }
-        Button {
-            flat: true
-            visible: !!box.under
-            text: box.under && box.under.paused ? "Go on" : "Pause"
-            onClicked: box.ask("pauseRecording", [!(box.under && box.under.paused)])
-        }
-        Label {
-            visible: !!box.under
-            text: box.under ? "Recording " + box.time(box.under.elapsed) : ""
-        }
-        ProgressBar {
-            visible: !!box.under
-            width: 60
-            value: box.under ? box.under.level : 0
-            Accessible.name: "How loud it is"
-        }
-        Repeater {
-            model: box.line.recordings
-            delegate: Button {
-                required property var modelData
+        Layout.preferredHeight: bar.height
+        contentWidth: bar.width
+        flickableDirection: Flickable.HorizontalFlick
+        // Only when it runs past the page: a Flickable takes the pen's press before a button hears it.
+        interactive: contentWidth > width
+        boundsBehavior: Flickable.StopAtBounds
+        clip: true
+        Row {
+            id: bar
+            spacing: 4
+            Button {
                 flat: true
-                visible: !modelData.recording
-                enabled: modelData.here
-                highlighted: !!box.playing && box.playing.id === modelData.id
-                text: (highlighted && box.playing.playing ? "Pause " : "Play ") + new Date(modelData.started).toLocaleTimeString(Qt.locale(), "HH:mm")
-                    + ", " + box.time(modelData.duration) + (modelData.here ? "" : " (on its way)")
-                onClicked: {
-                    if (!highlighted) box.ask("play", [modelData.id, 0])
-                    else box.ask("playing", [box.playing.playing ? "pause" : "play"])
+                visible: !!box.under
+                text: box.under && box.under.paused ? "Go on" : "Pause"
+                onClicked: box.ask("pauseRecording", [!(box.under && box.under.paused)])
+            }
+            Label {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !!box.under
+                text: box.under ? "Recording " + box.time(box.under.elapsed) : ""
+            }
+            ProgressBar {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !!box.under
+                width: 60
+                value: box.under ? box.under.level : 0
+                Accessible.name: "How loud it is"
+            }
+            Repeater {
+                model: box.line.recordings
+                delegate: Button {
+                    required property var modelData
+                    flat: true
+                    visible: !modelData.recording
+                    enabled: modelData.here
+                    highlighted: !!box.playing && box.playing.id === modelData.id
+                    text: (highlighted && box.playing.playing ? "Pause " : "Play ") + new Date(modelData.started).toLocaleTimeString(Qt.locale(), "HH:mm")
+                        + ", " + box.time(modelData.duration) + (modelData.here ? "" : " (on its way)")
+                    onClicked: {
+                        if (!highlighted) box.ask("play", [modelData.id, 0])
+                        else box.ask("playing", [box.playing.playing ? "pause" : "play"])
+                    }
                 }
             }
+            Button { flat: true; visible: !!box.playing; text: "Stop playing"; onClicked: box.ask("playing", ["stop"]) }
         }
-        Button { flat: true; visible: !!box.playing; text: "Stop playing"; onClicked: box.ask("playing", ["stop"]) }
     }
     Slider {
         Layout.fillWidth: true
