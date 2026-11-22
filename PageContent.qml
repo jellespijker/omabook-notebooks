@@ -131,9 +131,17 @@ Item {
         if (chosenItem && chosenItem.kind === "text")
             ask("changeText", [chosen, {format: chosenItem.format === "plain" ? "markdown" : "plain"}])
     }
-    function hit(at) {
+    // Whether a point of the page (millimetres) is on a text block or picture; an
+    // empty text block is reached `reach` millimetres around its middle (#15), as ContentItem is.
+    function hit(at, reach) {
+        const around = reach || 0
         return content.items.some(function (one) {
-            return at.x >= one.x && at.x <= one.x + one.width && at.y >= one.y && at.y <= one.y + one.height
+            const empty = one.kind === "text" && one.text === ""
+            const width = empty ? Math.max(one.width, around) : one.width
+            const height = empty ? Math.max(one.height, around) : one.height
+            const x = one.x + (one.width - width) / 2
+            const y = one.y + (one.height - height) / 2
+            return at.x >= x && at.x <= x + width && at.y >= y && at.y <= y + height
         })
     }
     // A picture from a file: picked, or dropped at a place on the page (in millimetres).

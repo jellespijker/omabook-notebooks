@@ -31,6 +31,12 @@ Omabook it needs.
   without each word's moment, as voxtype's is, says so, and a word found in it plays from the start of its
   sentence. Works with Omabook 0.2.0 too, which says it through its recognition status.
 
+### Fixed
+
+- An empty text block is big enough to tap with a finger (#15): with the Type tool it is reached within a
+  fingertip (44 px) around it, though it stays one line high, so a tap to type or dictate into it no longer
+  misses and makes a new block beside it.
+
 ## [1.0.0] - 2026-11-21
 
 Needs Omabook 0.2.0.

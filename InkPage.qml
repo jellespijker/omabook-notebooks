@@ -354,7 +354,7 @@ FocusScope {
                     enabled: page.tool === "type" && pageContent.editing === ""
                     onTapped: (point) => {
                         const at = page.onPaper(point.position)
-                        if (pageContent.hit(at)) return
+                        if (pageContent.hit(at, 44 / sheet.unit)) return
                         if (pageContent.chosen !== "") pageContent.chosen = ""
                         else pageContent.newText(at)
                     }

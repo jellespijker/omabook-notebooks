@@ -26,6 +26,10 @@ Item {
     property string picture: ""
     // Where a text block is typed in: the rail's microphone says into it (#13).
     readonly property alias field: editor
+    // An empty text block is one ruling high, less than a fingertip (#15): it is
+    // reached within `reach` pixels around its middle, though it stays a line.
+    readonly property bool empty: isText && (editing ? editor.length === 0 : item.text === "")
+    readonly property real reach: 44
 
     signal choose()
     signal edit()
@@ -59,6 +63,35 @@ Item {
     Accessible.name: isText ? item.text : ("Picture" + (item.title ? " " + item.title : ""))
 
     readonly property real fontSize: Math.max(4, step * unit * 0.58)
+
+    // Where a pointer reaches the block: itself, or a fingertip around an empty one.
+    Item {
+        id: reached
+        anchors.centerIn: parent
+        width: Math.max(parent.width, block.empty ? block.reach : 0)
+        height: Math.max(parent.height, block.empty ? block.reach : 0)
+
+        HoverHandler { id: hover; enabled: block.arranging; cursorShape: block.editing ? Qt.IBeamCursor : Qt.SizeAllCursor }
+        TapHandler {
+            enabled: block.arranging
+            onTapped: if (block.editing) editor.forceActiveFocus(); else block.choose()
+            onDoubleTapped: if (block.isText && !block.editing) block.edit()
+        }
+        DragHandler {
+            target: null
+            enabled: block.arranging && !block.editing
+            onActiveTranslationChanged: if (active) block.moving = Qt.point(activeTranslation.x, activeTranslation.y)
+            onActiveChanged: {
+                if (active) {
+                    block.choose()
+                    return
+                }
+                const moved = {x: block.item.x + block.moving.x / block.unit, y: block.item.y + block.moving.y / block.unit}
+                block.moving = Qt.point(0, 0)
+                block.placed(moved)
+            }
+        }
+    }
 
     FontMetrics { id: metrics; font.pixelSize: block.fontSize }
 
@@ -161,24 +194,4 @@ Item {
         HoverHandler { cursorShape: Qt.SizeFDiagCursor }
     }
 
-    HoverHandler { id: hover; enabled: block.arranging; cursorShape: block.editing ? Qt.IBeamCursor : Qt.SizeAllCursor }
-    TapHandler {
-        enabled: block.arranging && !block.editing
-        onTapped: block.choose()
-        onDoubleTapped: if (block.isText) block.edit()
-    }
-    DragHandler {
-        target: null
-        enabled: block.arranging && !block.editing
-        onActiveTranslationChanged: if (active) block.moving = Qt.point(activeTranslation.x, activeTranslation.y)
-        onActiveChanged: {
-            if (active) {
-                block.choose()
-                return
-            }
-            const moved = {x: block.item.x + block.moving.x / block.unit, y: block.item.y + block.moving.y / block.unit}
-            block.moving = Qt.point(0, 0)
-            block.placed(moved)
-        }
-    }
 }
