@@ -6,6 +6,10 @@ Omabook it needs.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-22
+
+Needs Omabook 0.2.0; dictation, recorded speech written out and the model offer need Omabook 0.4.0.
+
 ### Added
 
 - Text blocks and recognised text are said as well as typed (#13): with the Type tool, the text block chosen
