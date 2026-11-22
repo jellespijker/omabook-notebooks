@@ -19,6 +19,7 @@ Pane {
     property var playing: null
     property var said: []
     signal play(string id, real at)
+    signal problem(string why)
 
     padding: 8
 
@@ -64,6 +65,16 @@ Pane {
                         wrapMode: Text.Wrap
                         opacity: 0.7
                         font.pixelSize: 12
+                    }
+                    ModelRemedy {
+                        Layout.fillWidth: true
+                        plugin: pane.plugin
+                        capability: "speech-to-text"
+                        remedy: one.modelData.remedy || null
+                        mend: "mendTranscription"
+                        mendArgs: [one.modelData.id]
+                        onMended: pane.reload()
+                        onProblem: (why) => { pane.problem(why); pane.reload() }
                     }
                     Repeater {
                         model: one.modelData.segments || []

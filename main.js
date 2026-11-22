@@ -236,6 +236,15 @@ function correctRecognised(pageId, text) {
 }
 function recognisedToText(pageId, options) { return Recognised.toText(pageId, options); }
 
+// Where a page couldn't be read for want of a model on the server
+// (`recognised`'s `remedy`): Omabook chooses the one there, or downloads
+// it, and the page is read again with it; a promise of its state. How far
+// a download is, 0 to 1 (-1: none under way), for "handwriting" or "speech-to-text".
+function mendRecognition(pageId) {
+    return Ai.mend("handwriting").then(function () { return recognise(pageId, {again: true}); });
+}
+function mending(capability) { return Ai.mendedSoFar(String(capability)); }
+
 // Recording on a page while it is written (only in the window, once the
 // person said yes): started, paused or gone on with, stopped, and what is
 // under way. When it stops it is kept, and transcribed in the background.
@@ -278,6 +287,10 @@ function transcript(id) { return Transcripts.state(id); }
 function transcripts(pageId) { return Transcripts.ofPage(pageId); }
 function transcribe(id, options) {
     return Transcripts.transcribe(id, options).then(function (told) { recordingWritten(id); return told; });
+}
+// As mendRecognition, for a recording whose transcript wanted a model.
+function mendTranscription(id) {
+    return Ai.mend("speech-to-text").then(function () { return transcribe(id, {again: true}); });
 }
 
 // What is on a page but its ink: its text blocks and pictures, lowest first

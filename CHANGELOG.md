@@ -17,6 +17,13 @@ Omabook it needs.
   its recordings go to one. Needs Omabook 0.4.0; an older Omabook has no microphone, and the rest works as
   before.
 
+- Where handwriting or a recording can't be read because the server has no model for it, Omabook's fix is
+  offered under the reason (#16): a model already on the server that can do it, or a small one to download
+  onto it, its size said, with one press by mouse, finger or pen, or Enter once it has the keyboard; the
+  download shows how far it is, and the page or the recording is read again with the model chosen. It is
+  Omabook's (jellespijker/omabook#172), and for handwriting it looks at handwriting's own server. Needs
+  Omabook 0.4.0; an older Omabook says only why, as before.
+
 ### Changed
 
 - A page open is the whole view (#14): the notebooks, the paper pickers and the title fold away, and the page

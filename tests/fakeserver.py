@@ -2,6 +2,10 @@
 the OpenAI-compatible API on this computer, which answers each request with the next reply in its
 queue and keeps what it was sent. The scratch library's config.json is pointed at it, so
 handwriting is "recognised" here and never leaves the computer.
+
+With `ollama` set ({model: what it does}), it is an Ollama server too, as Omabook's tests/fakeollama.h is:
+it lists its models (/api/tags), says what each does (/api/show), downloads one (/api/pull, in steps),
+and refuses a chat with a model it hasn't, as Ollama does. None of that takes a reply from the queue.
 """
 
 import json
@@ -14,6 +18,7 @@ class FakeServer:
         self.replies = []
         self.received = []
         self.lock = threading.Lock()
+        self.ollama = None
         server = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -22,7 +27,11 @@ class FakeServer:
                 body = self.rfile.read(length) if length else b""
                 with server.lock:
                     server.received.append({"line": f"{self.command} {self.path}", "body": body})
-                    status, reply = server.replies.pop(0) if server.replies else (500, {"error": {"message": "nothing queued"}})
+                    own = server.as_ollama(self.path, body)
+                    if own is not None:
+                        status, reply = own
+                    else:
+                        status, reply = server.replies.pop(0) if server.replies else (500, {"error": {"message": "nothing queued"}})
                 # A chat answer comes as server-sent events, as a server streams it (answer()).
                 streamed = isinstance(reply, bytes)
                 data = reply if streamed else json.dumps(reply).encode()
@@ -42,6 +51,25 @@ class FakeServer:
         self.http = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.thread = threading.Thread(target=self.http.serve_forever, daemon=True)
         self.thread.start()
+
+    def as_ollama(self, path, body):
+        """What Ollama answers itself, by the path: None for what the queue answers."""
+        if self.ollama is None:
+            return None
+        asked = json.loads(body) if body else {}
+        if path == "/api/tags":
+            models = [{"name": name, "size": 1_000_000, "details": {"family": name.split(":")[0]}} for name in self.ollama]
+            return 200, {"models": models}
+        if path == "/api/show":
+            known = asked.get("model") in self.ollama
+            return (200, {"capabilities": self.ollama[asked["model"]]}) if known else (404, {"error": "not found"})
+        if path == "/api/pull":
+            self.ollama[asked["model"]] = ["completion", "vision"]
+            steps = [{"status": "pulling", "total": 100, "completed": done} for done in (0, 50, 100)] + [{"status": "success"}]
+            return 200, "".join(json.dumps(one) + "\n" for one in steps).encode()
+        if path.endswith("/chat/completions") and asked.get("model") not in self.ollama:
+            return 404, {"error": {"message": f'model "{asked.get("model")}" not found, try pulling it first'}}
+        return None
 
     @property
     def url(self):
@@ -80,13 +108,18 @@ class FakeServer:
             return [
                 json.loads(one["body"])
                 for one in self.received
-                if one["line"].startswith("POST") and one["body"] and "/audio/" not in one["line"]
+                if one["line"].startswith("POST") and one["body"] and "/audio/" not in one["line"] and "/api/" not in one["line"]
             ]
 
     def transcriptions(self):
         """The recordings it was sent to transcribe: each request's form, as bytes."""
         with self.lock:
             return [one["body"] for one in self.received if one["line"].startswith("POST") and "/audio/transcriptions" in one["line"]]
+
+    def pulled(self):
+        """The models it was asked to download, by name."""
+        with self.lock:
+            return [json.loads(one["body"])["model"] for one in self.received if one["line"] == "POST /api/pull"]
 
     def close(self):
         self.http.shutdown()

@@ -10,7 +10,8 @@ import QtQuick.Layouts
 //
 // The script keeps the words with the page and says where they stand
 // (`recognised`): read, behind the ink, waiting for the server, or that
-// there is no server that may read handwriting here.
+// there is no server that may read handwriting here; where its server lacks
+// the model, Omabook's offer to find or download one (ModelRemedy, #16).
 ColumnLayout {
     id: box
 
@@ -107,6 +108,20 @@ ColumnLayout {
         text: box.reading && box.told.status !== "waiting" ? "Reading the handwriting…" : box.words()
         wrapMode: Text.Wrap
         opacity: 0.8
+    }
+
+    ModelRemedy {
+        Layout.fillWidth: true
+        plugin: box.plugin
+        capability: "handwriting"
+        remedy: box.told.remedy || null
+        mend: "mendRecognition"
+        mendArgs: [box.pageId]
+        onMended: (result) => {
+            if (result && result.status !== undefined) box.told = result
+            if (!editor.activeFocus) editor.text = box.told.text
+        }
+        onProblem: (why) => { box.problem(why); box.reload() }
     }
 
     RowLayout {

@@ -34,6 +34,7 @@ import paper
 import recognition
 import recordings
 import references
+import remedies
 from bench import NAME, OMABOOK, ROOT, Bench
 
 SAMPLE = os.path.join(ROOT, "tests", "data", "sample.omanotebook")
@@ -202,6 +203,7 @@ def main():
         ink.check(bench, step)
         content.check(bench, step)
         recognition.check(bench, step)
+        remedies.check(bench, step)
         recordings.check(bench, step)
         knowledge.check(bench, step)
         references.check(bench, step)

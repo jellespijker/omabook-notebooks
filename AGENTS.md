@@ -20,7 +20,7 @@ JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`Noteboo
 `PageReferences.qml`, `BookReferences.qml`, `PageContent.qml`, `PageLayer.qml`, `ContentItem.qml`,
 `PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml`,
 `PageAbout.qml`, `NotebookFind.qml`, `NotebookExport.qml`, `NotebookAsk.qml`, `PaperSheet.qml`, and
-`Dictate.qml` with `DictationMic.qml`), and Python
+`Dictate.qml` with `DictationMic.qml`, and `ModelRemedy.qml`), and Python
 tests.
 
 ## The harness

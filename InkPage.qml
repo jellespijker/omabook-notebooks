@@ -474,5 +474,6 @@ FocusScope {
         width: page.narrow ? page.width : 300
         height: flick.height
         onPlay: (id, at) => pageRecordings.ask("play", [id, at])
+        onProblem: (why) => page.problem = why
     }
 }
