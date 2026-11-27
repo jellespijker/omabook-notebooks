@@ -44,6 +44,9 @@ class Bench:
         self.env.pop("ANTHROPIC_API_KEY", None)
         with open(os.path.join(self.config, "omabook", "config.json"), "w") as file:
             json.dump({"library": self.library, "graph": "off"}, file)
+        # The scratch library made as one asks for a new one: since Omabook 0.5.2 a library the settings
+        # name that isn't there is not made in its place (jellespijker/omabook#221).
+        subprocess.run([OMABOOK, "libraries", "--use", self.library, "--create"], env=self.env, capture_output=True, check=True)
         # The plugin as it would be installed: everything but tests and data.
         shutil.copytree(ROOT, self.plugin, ignore=shutil.ignore_patterns(".git", "data", "tests", ".scratch", "__pycache__"))
 
