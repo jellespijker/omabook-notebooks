@@ -6,5 +6,8 @@
 # the content that was reviewed, so a later change is scanned again. Add an
 # entry only after looking at the file (`talisman --checksum <file>`).
 threshold: medium
-fileignoreconfig: []
+fileignoreconfig:
+# The base64 alphabet a stroke's bytes are read and written with (#10): no secret.
+- filename: lib/strokecodec.js
+  checksum: da080e1c73a5d4e96dc12ba24bfd79be8bcdf47d6f604b058eafba142d9c0b57
 version: "1.0"
