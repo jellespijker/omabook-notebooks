@@ -51,6 +51,15 @@ does is kept as erasing is: the strokes taken out, new ones put in.
 _Avoid_: Marquee, selection (for what the lasso holds)
 _Avoid_: Brush, mode
 
+**Neat shapes**:
+A way of drawing, switched on and off: a line, arrow, circle, ellipse, rectangle or triangle drawn roughly
+in one stroke is drawn neat, still ink.
+_Avoid_: Shape recognition, auto-correct, snapping (in words a person reads)
+
+**Ruler**:
+A straight edge laid on a page to draw along; moved and turned, and never part of the page.
+_Avoid_: Ruling (that is a lined paper's), guide
+
 **Text block**:
 Typed text placed on a page, set on the paper's lines: plain text or Markdown, never HTML.
 _Avoid_: Text box, paragraph, typed note

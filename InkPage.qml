@@ -40,6 +40,10 @@ import Omabook
 // tool (PageTools) shows above the page with \ or the rail's handle, and
 // Escape puts them away again.
 //
+// Neat shapes (O) draw a rough shape neat once the pen lifts, and the ruler
+// (U) lays a line drawn beside it on its edge (PageShapes, #10); with the
+// ruler out the arrows move it, and with Alt turn it.
+//
 // Keys: P pen, H highlighter, E eraser (again: whole strokes or parts),
 // 1 to 4 a colour, [ and ] thinner and thicker, F what a finger does,
 // Ctrl+Z and Ctrl+Shift+Z undo and redo, Page Up and Page Down the page
@@ -95,6 +99,7 @@ FocusScope {
     readonly property int lassoed: surface.selection.count
     readonly property int referenceCount: references.list.length
     readonly property alias recordings: pageRecordings
+    readonly property alias shapes: pageShapes
 
     readonly property bool resting: tool === "type" || tool === "select" || tool === "listen"
     readonly property var pen: tools ? tools.pens.find(function (one) {
@@ -110,6 +115,8 @@ FocusScope {
         return one.width
     }
     function choose(id) {
+        // What the tool before drew goes as it drew it.
+        surface.flush()
         if (id !== "type") { pageContent.chosen = ""; pageContent.editing = "" }
         if (id !== "select") { selection = []; selected = null }
         if (id !== "lasso") surface.selection.clear()
@@ -149,7 +156,9 @@ FocusScope {
     function reload() {
         if (!entry) return
         surface.flush()
-        surface.load(backend.scripts.call(plugin, "strokes", [entry.id]) || {})
+        const strokes = backend.scripts.call(plugin, "strokes", [entry.id]) || {}
+        pageShapes.loaded(strokes)
+        surface.load(strokes)
         pageContent.reload()
         references.reload()
     }
@@ -251,8 +260,7 @@ FocusScope {
         plain[Qt.Key_G] = function () { page.followReference(shift ? -1 : 1) }
         plain[Qt.Key_Backslash] = function () { page.allTools = !page.allTools }
         if (page.allTools) plain[Qt.Key_Escape] = function () { page.allTools = false }
-        if (page.tool === "type")
-            Object.assign(plain, pageContent.keys(event))
+        Object.assign(plain, pageShapes.keys(event), page.tool === "type" ? pageContent.keys(event) : {})
         const one = ctrl ? withCtrl[event.key] : plain[event.key]
         if (!ctrl && event.key >= Qt.Key_1 && event.key <= Qt.Key_4) {
             page.chooseColour(event.key - Qt.Key_1)
@@ -336,7 +344,7 @@ FocusScope {
             contentHeight: sheet.height + 24
             boundsBehavior: Flickable.StopAtBounds
             // A finger scrolls through the surface once the pen is the one writing.
-            interactive: surface.fingers !== InkSurface.Draw && !surface.writing
+            interactive: surface.fingers !== InkSurface.Draw && !surface.writing && !pageShapes.holding
             ScrollBar.vertical: ScrollBar {}
             ScrollBar.horizontal: ScrollBar {}
 
@@ -371,13 +379,14 @@ FocusScope {
                     color: page.colours.length ? page.colours[page.colourAt[page.pen.id] || 0].value : "#1d1d1f"
                     penWidth: page.tools && page.pen ? page.widthOf(page.pen.id) : 0.5
                     eraserWidth: page.tools ? page.widthOf("eraser") : 24
-                    batchPause: 600
+                    // A stroke to be made neat is, as soon as the pen lifts.
+                    batchPause: pageShapes.active ? 40 : 600
                     readOnly: !page.entry || page.resting || pageRecordings.replaying
                     Accessible.role: Accessible.Graphic
                     Accessible.name: page.entry ? (page.entry.title + ", " + surface.count + (surface.count === 1 ? " stroke" : " strokes")) : ""
                     onInked: (batch) => {
                         if (!page.entry) return
-                        page.ask("ink", [page.entry.id, batch])
+                        page.ask("ink", [page.entry.id, pageShapes.kept(batch)])
                         recognisedText.inkChanged()
                     }
                 }
@@ -399,6 +408,14 @@ FocusScope {
                     listening: page.tool === "listen"
                     glowing: pageRecordings.glowing
                     onTapped: (at) => pageRecordings.playFrom(at)
+                }
+
+                PageShapes {
+                    id: pageShapes
+                    anchors.fill: parent
+                    page: page
+                    ink: surface
+                    unit: sheet.unit
                 }
 
                 // The Select tool: a rectangle dragged over the page chooses the strokes in it.

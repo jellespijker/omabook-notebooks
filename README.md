@@ -49,6 +49,12 @@ a save dialog for plugins, `omabook://` links and the AI's whereabouts).
   servers give each word its moment; voxtype doesn't, so there a word found plays from the start of its
   sentence, and the transcript says so. Speech goes
   to a hosted server only for a notebook that chose it, and only when Omabook's settings allow it.
+- **Shapes and a ruler.** With neat shapes on (`O`), a line, arrow, circle, ellipse, rectangle or triangle
+  drawn roughly in one stroke is drawn neat once the pen lifts; writing and small loops stay as written. An
+  arrow's head is drawn without lifting the pen. `U` lays a ruler on the page, and a line drawn beside either
+  edge is laid straight on it. The mouse, a finger or the pen drags it and turns it by its knob (two fingers
+  and the wheel turn it too); the arrows move it (Shift: further), Alt with left and right turns it (Shift:
+  finer), and its × or `U` puts it away. Undo takes a neat stroke away.
 - **The lasso.** `L` goes around strokes to move, recolour (`1` to `4`), copy, cut, paste or take them away;
   it is kept as erasing is, so it merges between computers too.
 - **Beside the book.** `Alt+N` while reading opens the notebooks beside the page, with every page that refers

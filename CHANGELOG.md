@@ -6,6 +6,17 @@ Omabook it needs.
 
 ## [Unreleased]
 
+### Added
+
+- Neat shapes (#10): with *Neat shapes* on (`O`, or its button in the page's column), a line, arrow,
+  circle, ellipse, rectangle or triangle drawn roughly in one stroke is drawn neat once the pen lifts, in
+  the stroke's colour and width. Writing, small loops and anything not close to a shape stay as written.
+  Undo takes the neat stroke away.
+- A ruler (#10): `U` or its button lays it on the page, and a line drawn beside either edge is laid
+  straight on it once the pen lifts, with the pen's pressure. The mouse, a finger or the pen drags it and
+  turns it by its knob; two fingers or the wheel turn it too; from the keyboard the arrows move it (Shift:
+  further) and Alt with left and right turns it (Shift: finer).
+
 ## [1.1.0] - 2026-11-22
 
 Needs Omabook 0.2.0; dictation, recorded speech written out and the model offer need Omabook 0.4.0.

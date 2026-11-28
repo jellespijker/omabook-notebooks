@@ -56,6 +56,8 @@ Flickable {
             highlighted: tools.page.tool === "eraser"
             onClicked: tools.page.choose("eraser")
         }
+        Tool { text: "Neat shapes (O)"; highlighted: tools.page.shapes.neat; onClicked: tools.page.shapes.toggleNeat() }
+        Tool { text: "Ruler (U)"; highlighted: tools.page.shapes.ruled; onClicked: tools.page.shapes.toggleRuler() }
         Tool { text: "Type (T)"; highlighted: tools.page.tool === "type"; onClicked: tools.page.choose("type") }
         Tool { text: "Select (S)"; highlighted: tools.page.tool === "select"; onClicked: tools.page.choose("select") }
         Tool { text: "Lasso (L)"; highlighted: tools.page.tool === "lasso"; onClicked: tools.page.choose("lasso") }

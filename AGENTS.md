@@ -19,6 +19,7 @@ workspace's `AGENTS.md` first.
 JavaScript for Omabook's script engine (`main.js`, `lib/`), a QML view (`NotebookView.qml`, with `InkPage.qml`, `PageTools.qml`, `PageRail.qml`,
 `PageReferences.qml`, `BookReferences.qml`, `PageContent.qml`, `PageLayer.qml`, `ContentItem.qml`,
 `PictureImport.qml`, `RecognisedText.qml`, `PageRecordings.qml`, `InkMoments.qml`, `TranscriptPane.qml`,
+`PageShapes.qml`, `PageRuler.qml`,
 `PageAbout.qml`, `NotebookFind.qml`, `NotebookExport.qml`, `NotebookAsk.qml`, `PaperSheet.qml`, and
 `Dictate.qml` with `DictationMic.qml`, and `ModelRemedy.qml`), and Python
 tests.
@@ -43,7 +44,7 @@ Once per clone: `uvx pre-commit install`. Before handing work in: `bin/check`. N
 ## Testing
 
 ```bash
-python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures, recognised text, recordings, search, the graph, place references, exports and asking; needs omabook on the PATH, or OMABOOK=/path/to/omabook
+python3 tests/run.py     # notebooks, pages, paper, ink, text blocks, pictures, recognised text, recordings, shapes and the ruler, search, the graph, place references, exports and asking; needs omabook on the PATH, or OMABOOK=/path/to/omabook
 ```
 
 Recognition is tested against a stand-in AI server on this computer (`tests/fakeserver.py`, as Omabook's

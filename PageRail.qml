@@ -40,6 +40,8 @@ Flickable {
         stop: "M7 7 H17 V17 H7 Z",
         play: "M8 5 L19 12 L8 19 Z",
         pause: "M8 5 V19 M16 5 V19",
+        shapes: "M9 4 L15 14 H3 Z M15.5 10 A5 5 0 1 0 15.6 10",
+        ruler: "M3 17 L17 3 L21 7 L7 21 Z M7 13 L9 15 M10 10 L12 12 M13 7 L15 9",
         said: "M4 5 H20 V16 H11 L7 20 V16 H4 Z M8 9 H16 M8 12 H13"
     })
 
@@ -158,6 +160,24 @@ Flickable {
             key: "E"
             lit: rail.page.tool === "eraser"
             onClicked: rail.page.choose("eraser")
+        }
+        RailButton {
+            objectName: "railShapes"
+            anchors.horizontalCenter: parent.horizontalCenter
+            drawing: "shapes"
+            tip: rail.page.shapes.neat ? "Neat shapes are on" : "Neat shapes: lines, arrows, circles and boxes drawn neat"
+            key: "O"
+            lit: rail.page.shapes.neat
+            onClicked: rail.page.shapes.toggleNeat()
+        }
+        RailButton {
+            objectName: "railRuler"
+            anchors.horizontalCenter: parent.horizontalCenter
+            drawing: "ruler"
+            tip: rail.page.shapes.ruled ? "Put the ruler away" : "Ruler"
+            key: "U"
+            lit: rail.page.shapes.ruled
+            onClicked: rail.page.shapes.toggleRuler()
         }
         // The colours of the pen in hand, the one chosen ringed.
         Repeater {
