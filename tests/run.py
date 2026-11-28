@@ -35,6 +35,7 @@ import recognition
 import recordings
 import references
 import remedies
+import shapes
 from bench import NAME, OMABOOK, ROOT, Bench
 
 SAMPLE = os.path.join(ROOT, "tests", "data", "sample.omanotebook")
@@ -201,6 +202,7 @@ def main():
         removing(bench, step, physics, other)
         snapshots(bench, step)
         ink.check(bench, step)
+        shapes.check(bench, step)
         content.check(bench, step)
         recognition.check(bench, step)
         remedies.check(bench, step)

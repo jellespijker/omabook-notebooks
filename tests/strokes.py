@@ -60,3 +60,53 @@ def line(x, y, length=30, **options):
 def batch(*encoded, remove=()):
     """An ink batch, as the surface's `inked` sends it: {add: {id: base64}, remove: [id]}."""
     return {"add": {new_id(): one for one in encoded}, "remove": list(remove)}
+
+
+def decode(text):
+    """A stroke read back: {flags, colour, width mm, began, points [(x mm, y mm, pressure 0-1, ms)]}.
+    Every byte must be used, as Omabook's codec has it."""
+    data = base64.b64decode(text, validate=True)
+    assert data[0] == 1 and data[1] <= 7, data[:2]
+    at = 6
+
+    def number():
+        nonlocal at
+        value = shift = 0
+        while True:
+            byte = data[at]
+            at += 1
+            value |= (byte & 0x7F) << shift
+            shift += 7
+            if byte < 0x80:
+                return value
+
+    def signed():
+        value = number()
+        return value >> 1 if value % 2 == 0 else -(value >> 1) - 1
+
+    width, began, count = number() / 8, signed(), number()
+    x = y = pressure = ms = 0
+    points = []
+    for _ in range(count):
+        x, y = x + signed(), y + signed()
+        if data[1] & PRESSURED:
+            pressure += signed()
+        if data[1] & 0x02:
+            signed(), signed()
+        ms += number()
+        points.append((x / 8, y / 8, pressure / 255, ms))
+    assert at == len(data), "bytes after the last point"
+    return {"flags": data[1], "colour": int.from_bytes(data[2:6], "big"), "width": width, "began": began, "points": points}
+
+
+def through(corners, step=1.5, wobble=0.35, **options):
+    """A hand drawing through `corners` [(x, y)]: points `step` mm apart, off by up to `wobble`."""
+    shake = random.Random(len(corners) * 31 + int(corners[0][0]))
+    points = []
+    for (ax, ay), (bx, by) in zip(corners, corners[1:], strict=False):
+        pieces = max(1, int(((bx - ax) ** 2 + (by - ay) ** 2) ** 0.5 / step))
+        for i in range(pieces):
+            t = i / pieces
+            points.append((ax + (bx - ax) * t + shake.uniform(-wobble, wobble), ay + (by - ay) * t + shake.uniform(-wobble, wobble)))
+    points.append(corners[-1])
+    return encode([(x, y, 0.4 + 0.2 * (i % 2), i * 9) for i, (x, y) in enumerate(points)], **options)

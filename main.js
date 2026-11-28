@@ -22,6 +22,9 @@ omabook.include("lib/paper.js");     // Paper: kinds and sizes of paper, and wha
 omabook.include("lib/typed.js");     // Typed: a text block's words, plain or Markdown, never HTML
 omabook.include("lib/ai.js");        // Ai: the AI the person chose, its answers checked, and where speech can go
 omabook.include("lib/store.js");     // Store: notebooks, pages and what is on them in the change log
+omabook.include("lib/strokecodec.js"); // StrokeCodec: a stroke's bytes, read and written
+omabook.include("lib/shapes.js");    // Shapes: a rough line, arrow, circle or polygon, found and drawn neat
+omabook.include("lib/neat.js");      // Neat: strokes just drawn made neat, along the ruler or as a shape
 omabook.include("lib/ink.js");       // Ink: the strokes on a page, and the tools that write them
 omabook.include("lib/pictures.js");  // Pictures: a picture's bytes, checked and kept in pieces
 omabook.include("lib/content.js");   // Content: text blocks and pictures on a page, placed and layered
@@ -210,6 +213,11 @@ function ink(pageId, batch) {
     return count;
 }
 function inkTools() { return Ink.tools(); }
+
+// Of strokes just drawn ({id: base64}), those drawn along the ruler's edge
+// laid on it, and with `shapes` those that are roughly a shape made neat:
+// {id: base64} of the changed ones only. Nothing is kept (Neat).
+function neaten(drawn, options) { return Neat.strokes(drawn, options); }
 
 // Where a page's strokes lie, {id: {x, y, width, height}} in millimetres:
 // for choosing some of them with a rectangle.

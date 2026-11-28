@@ -26,6 +26,9 @@ that every file in `lib/` is included, and that each makes exactly one global.
 | `Typed` | a text block's words: plain text or Markdown, cleaned, never HTML |
 | `Ai` | the one way to the model the person chose (`omabook.ai`), its answers checked, and whether speech to text may be asked |
 | `Store` | **the live data**: notebooks, pages, text blocks, pictures, recognised text, recordings, transcripts, mentions and place references as things in `omabook.log` (ADR 0002) |
+| `StrokeCodec` | a stroke's bytes as Omabook writes them, read and written |
+| `Shapes` | a rough line, arrow, circle or polygon found among points and drawn neat; geometry alone |
+| `Neat` | strokes just drawn, made neat: along the ruler's edge, or as the shape they roughly are |
 | `Ink` | the strokes on a page (ink batches from Omabook's ink surface and its lasso, through `Store`), where each lies, and the tools |
 | `Pictures` | a picture's bytes: checked, capped, in pieces for the log, joined again |
 | `Content` | text blocks and pictures on a page: placed on the paper's lines, moved, resized, above or below the ink |
